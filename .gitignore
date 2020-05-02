@@ -1,0 +1,6 @@
+*.opendb
+*.TMP
+*.VC.db
+*.pdb
+*.user
+.vscode/
