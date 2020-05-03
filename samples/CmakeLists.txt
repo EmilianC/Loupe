@@ -1,0 +1,4 @@
+list(APPEND sample_files
+	"${CMAKE_CURRENT_LIST_DIR}/samples_main.cpp")
+
+add_test(samples sample_files)

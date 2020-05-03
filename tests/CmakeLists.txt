@@ -1,0 +1,4 @@
+list(APPEND test_files
+	"${CMAKE_CURRENT_LIST_DIR}/catch_main.cpp")
+
+add_test(tests test_files)
