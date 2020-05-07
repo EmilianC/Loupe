@@ -9,6 +9,8 @@ endif()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # Omit ZERO_CHECK project
 set(CMAKE_SUPPRESS_REGENERATION true)
+# Disable MinSizeRel and RelWithDebInfo
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
 
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
