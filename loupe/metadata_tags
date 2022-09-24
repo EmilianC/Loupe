@@ -1,0 +1,16 @@
+// Copyright (c) 2022 Emilian Cioca
+#pragma once
+namespace loupe
+{
+	// Takes a lambda in the template arg (with a this* to the surrounding type)
+	template<typename Functor>
+	struct condition
+	{
+		Functor Func;
+	};
+
+	template<float min, float max>
+	struct range
+	{
+	};
+}

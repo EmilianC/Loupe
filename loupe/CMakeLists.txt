@@ -1,16 +1,23 @@
 list(APPEND loupe_files
-	"${CMAKE_CURRENT_LIST_DIR}/loupe.h")
+	"loupe.cpp"
+	"loupe.h"
+	"loupe.inl"
+)
 
-add_library(LOUPE_LIB INTERFACE)
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${loupe_files})
 
-target_link_libraries(LOUPE_LIB INTERFACE project_options)
-target_sources(LOUPE_LIB INTERFACE ${loupe_files})
-target_include_directories(LOUPE_LIB INTERFACE "${CMAKE_CURRENT_LIST_DIR}")
+add_library(loupe STATIC ${loupe_files})
+target_compile_features(loupe PUBLIC cxx_std_20)
+target_include_directories(loupe PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+loupe_set_warnings(loupe)
 
-# For IDE only
-add_custom_target(loupe SOURCES ${loupe_files})
-target_source_group(loupe)
-
-#target_source_group(loupe DIRECTORY "${CMAKE_CURRENT_LIST_DIR}")
-#target_include_directories(loupe "${CMAKE_CURRENT_LIST_DIR}")
-#set_target_properties(loupe PROPERTIES LINKER_LANGUAGE CXX)
+option(LOUPE_PCH "Use a precompiled header file." OFF)
+if (LOUPE_PCH)
+	target_precompile_headers(loupe
+		PRIVATE
+			<string_view>
+			<type_traits>
+			<unordered_map>
+			<vector>
+	)
+endif()

@@ -1,6 +1,27 @@
-function(set_project_warnings project_name)
-	option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" TRUE)
+# Toggle LTO
+option(LOUPE_ENABLE_LTO "Enable Link Time Optimization" ON)
+if (LOUPE_ENABLE_LTO)
+	include(CheckIPOSupported)
+	check_ipo_supported(RESULT result OUTPUT output)
+	if(result)
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+	else()
+		message(SEND_ERROR "LTO is not supported: ${output}")
+	endif()
+endif()
 
+
+# Check if the project is being included by another
+function(loupe_is_top_level project)
+	if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+		set(${project} ON PARENT_SCOPE)
+	else()
+		set(${project} OFF PARENT_SCOPE)
+	endif()
+endfunction()
+
+# Set up standard C++ warnings
+function(loupe_set_warnings project_name)
 	set(MSVC_WARNINGS
 		/W4          # Baseline reasonable warnings
 		/w14242      # 'identifier': conversion from 'type1' to 'type1', possible loss of data
@@ -56,10 +77,8 @@ function(set_project_warnings project_name)
 		-Wuseless-cast           # warn if you perform a cast to the same type
 	)
 
-	if (WARNINGS_AS_ERRORS)
-		set(CLANG_WARNINGS ${CLANG_WARNINGS} -Werror)
-		set(MSVC_WARNINGS ${MSVC_WARNINGS} /WX)
-	endif()
+	set(CLANG_WARNINGS ${CLANG_WARNINGS} -Werror)
+	set(MSVC_WARNINGS ${MSVC_WARNINGS} /WX)
 
 	if(MSVC)
 		set(PROJECT_WARNINGS ${MSVC_WARNINGS} ${MSVC_DISABLED_WARNINGS})
@@ -71,6 +90,6 @@ function(set_project_warnings project_name)
 		message(AUTHOR_WARNING "No compiler warnings set for '${CMAKE_CXX_COMPILER_ID}' compiler.")
 	endif()
 
-	target_compile_options(${project_name} INTERFACE ${PROJECT_WARNINGS})
+	target_compile_options(${project_name} PRIVATE ${PROJECT_WARNINGS})
 
 endfunction()
