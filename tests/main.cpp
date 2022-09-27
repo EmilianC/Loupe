@@ -4,6 +4,13 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow)
 {
+	if (GetConsoleWindow() == NULL)
+	{
+		AllocConsole();
+		freopen("CONOUT$", "w", stdout);
+		SetForegroundWindow(GetConsoleWindow());
+	}
+
 	int result = Catch::Session().run(__argc, __argv);
 	if (result != 0)
 	{

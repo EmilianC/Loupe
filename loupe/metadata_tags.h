@@ -3,14 +3,14 @@
 namespace loupe
 {
 	// Takes a lambda in the template arg (with a this* to the surrounding type)
-	template<typename Functor>
 	struct condition
 	{
-		Functor Func;
+		bool(*Func)(void*);
 	};
 
-	template<float min, float max>
-	struct range
+	struct float_range
 	{
+		float min;
+		float max;
 	};
 }

@@ -1,22 +1,26 @@
 list(APPEND loupe_test_files
 	"main.cpp"
-	"type_descriptor.cpp"
+	"test_data.cpp"
+	"test_data.h"
+	"tests.cpp"
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${loupe_test_files})
 
 add_executable(unit_tests WIN32 ${loupe_test_files})
+target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(unit_tests
 	PRIVATE
 		CATCH_CONFIG_FAST_COMPILE
 		CATCH_CONFIG_DISABLE_EXCEPTIONS
+		_CRT_SECURE_NO_WARNINGS
 )
-#target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 loupe_set_warnings(unit_tests)
+loupe_disable_rtti(unit_tests OPTIONAL)
+loupe_disable_exceptions(unit_tests OPTIONAL)
 
 # Disable warning: local variable is initialized but not referenced.
 target_compile_options(unit_tests PRIVATE /wd4189)
-
 target_link_libraries(unit_tests
 	PRIVATE
 		loupe

@@ -8,7 +8,7 @@ Loupe does not require Run-Time Type Information (RRTI) or Exceptions, and is de
 # 1.0 Features
 - Diff between blobs to detect and reconcile changes
 - Serialization ready (bring your own archiver)
-- Custom user-defined metadata attributes
+- User-defined metadata attributes
 
 # Post 1.0 Features
 - Reflection of functions
@@ -17,6 +17,8 @@ Loupe does not require Run-Time Type Information (RRTI) or Exceptions, and is de
 - Support beyond the Windows platform
 - Debugger .natvis files
 - Support for custom allocators
+- metadata support of enums
+- metadata with data (such as a range bound for floats)
 
 # Test Project Dependencies
 - [Catch 2.13.9](https://github.com/catchorg/Catch2/tree/v2.x)

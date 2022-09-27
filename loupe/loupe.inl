@@ -1,27 +1,67 @@
 // Copyright (c) 2022 Emilian Cioca
 namespace loupe
 {
-	template<typename Type>
-	const type_descriptor* reflection_blob::find_type() const
+	template<typename T> [[nodiscard]]
+	consteval std::string_view get_type_name()
 	{
-		const type_descriptor* descriptor = detail::type_handler<Type>::descriptor;
-		if (descriptor)
+		std::string_view result = __FUNCSIG__;
+		const std::string_view function_start_tag = "get_type_name<";
+		const std::string_view function_end_tag = ">(";
+		const std::string_view enum_tag = "enum ";
+		const std::string_view class_tag = "class ";
+		const std::string_view struct_tag = "struct ";
+
+		auto start_index = result.find(function_start_tag) + function_start_tag.size();
+		auto end_index = result.rfind(function_end_tag);
+
+		result = result.substr(start_index, end_index - start_index);
+
+		if (result.starts_with(enum_tag))
 		{
-			return find_type(descriptor->full_name);
+			result.remove_prefix(enum_tag.size());
 		}
 
-		return nullptr;
+		if (result.starts_with(class_tag))
+		{
+			result.remove_prefix(class_tag.size());
+		}
+
+		if (result.starts_with(struct_tag))
+		{
+			result.remove_prefix(struct_tag.size());
+		}
+
+		return result;
+	}
+
+	template<typename Tag>
+	bool member_descriptor::has_metadata() const
+	{
+		if (metadata.empty())
+			return false;
+
+		constexpr std::string_view tag_name = get_type_name<Tag>();
+		for (const type_descriptor* data : metadata)
+		{
+			if (tag_name == data->name)
+			{
+				return true;
+			}
+		}
 	}
 
 
-
-	// default supported types
-	namespace detail
+	template<typename Type>
+	auto reflection_blob::find() const
+		-> std::conditional_t<std::is_enum_v<Type>, const enum_descriptor*, const type_descriptor*>
 	{
-		extern template struct detail::type_handler<float>;
-		extern template struct detail::type_handler<double>;
-		extern template struct detail::type_handler<char>;
-		extern template struct detail::type_handler<int>;
-		extern template struct detail::type_handler<unsigned>;
+		if constexpr (std::is_enum_v<Type>)
+		{
+			return find_enum(get_type_name<Type>());
+		}
+		else
+		{
+			return find_type(get_type_name<Type>());
+		}
 	}
 }
