@@ -1,5 +1,8 @@
 #pragma once
 
+struct hidden {};
+struct editor_only {};
+
 enum class small_enum : short
 {
 	local_space = 0,
@@ -20,6 +23,21 @@ enum class large_enum : int
 	value8,
 	value9,
 	COUNT
+};
+
+struct quaternion
+{
+	float x = 0.0f;
+	float y = 0.0f;
+	float z = 0.0f;
+	float w = 1.0f;
+};
+
+struct vec3
+{
+	float x = 0.0f;
+	float y = 0.0f;
+	float z = 0.0f;
 };
 
 namespace nested
@@ -46,28 +64,39 @@ namespace nested
 		COUNT
 	};
 
-	struct vec3
+	struct transform
 	{
-		float x = 0.0f;
-		float y = 0.0f;
-		float z = 0.0f;
+		vec3 position;
+		vec3 scale;
+		quaternion rotation;
+		small_enum space = small_enum::local_space;
+		nested::large_enum value = nested::large_enum::value2;
+	};
+
+	struct base_object
+	{
+		transform world_transform;
+		transform local_transform;
+	};
+
+	struct base_physics
+	{
+		vec3 velocity;
 	};
 }
 
-struct quaternion
+struct game_object : public nested::base_object, public nested::base_physics
 {
-	float x = 0.0f;
-	float y = 0.0f;
-	float z = 0.0f;
-	float w = 1.0f;
+	float health = 100.0f;
+	bool enabled = true;
 };
 
-struct transform
+struct private_data
 {
-	nested::vec3 position;
-	nested::vec3 scale;
+	FRIEND_LOUPE;
+
+protected:
+	vec3 position;
+private:
 	quaternion rotation;
-	small_enum space = small_enum::local_space;
-	nested::large_enum value = nested::large_enum::value2;
 };
-

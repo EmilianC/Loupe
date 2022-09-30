@@ -50,7 +50,6 @@ namespace loupe
 		}
 	}
 
-
 	template<typename Type>
 	auto reflection_blob::find() const
 		-> std::conditional_t<std::is_enum_v<Type>, const enum_descriptor*, const type_descriptor*>

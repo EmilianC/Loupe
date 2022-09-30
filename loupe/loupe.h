@@ -37,9 +37,13 @@ namespace loupe
 			static inline const type_descriptor* descriptor = nullptr;
 		};
 
-		std::vector<void(*)(reflection_blob&)>& get_enum_descriptor_tasks();
-		std::vector<void(*)(reflection_blob&)>& get_type_descriptor_tasks();
-		std::vector<void(*)(reflection_blob&)>& get_member_descriptor_tasks();
+		enum class stage
+		{
+			types, bases_and_members
+		};
+
+		std::vector<void(*)(reflection_blob&)>&                          get_enum_descriptor_tasks();
+		std::vector<void(*)(reflection_blob&, type_descriptor&, stage)>& get_type_descriptor_tasks();
 
 		template<typename T> [[nodiscard]]
 		consteval std::string_view get_type_name();
@@ -49,8 +53,16 @@ namespace loupe
 	{
 		std::size_t offset;
 		std::string_view name;
-		const type_descriptor* type;
+		const type_descriptor* type = nullptr;
+		const enum_descriptor* enum_type = nullptr;
 		const type_descriptor* owning_type;
+
+		// Can the member value be changed.
+		bool is_const = false;
+		// Is the value an address to the type.
+		bool is_pointer = false;
+		// Is the referenced address immutable.
+		bool is_const_pointer = false;
 
 		std::vector<const type_descriptor*> metadata;
 
@@ -70,11 +82,8 @@ namespace loupe
 		const type_descriptor* underlying_type;
 		std::vector<enum_entry> entires;
 
-		template<typename T> [[nodiscard]]
-		T get_value_from_name(std::string_view name) const;
-
-		template<typename T> [[nodiscard]]
-		std::string_view get_name_from_value(T value) const;
+		[[nodiscard]] const std::size_t*      find_value_from_name(std::string_view entry_name) const;
+		[[nodiscard]] const std::string_view* find_name_from_value(std::size_t value) const;
 	};
 
 
@@ -82,19 +91,20 @@ namespace loupe
 	{
 		template<typename Type>
 		type_descriptor(const detail::type_handler<Type>& type_handler);
+		type_descriptor() = default;
 
 		[[nodiscard]] std::any make_new();
 
-		[[nodiscard]] const member_descriptor* find_member(std::string_view name) const;
+		[[nodiscard]] const member_descriptor* find_member(std::string_view member_name) const;
 		[[nodiscard]] const member_descriptor* find_member(std::size_t offset) const;
 		[[nodiscard]] const member_descriptor* find_first_of(const type_descriptor& type) const;
+		[[nodiscard]] const member_descriptor* find_first_of(const enum_descriptor& type) const;
 
 		[[nodiscard]] bool is_a(const type_descriptor* type) const;
 
-		std::vector<const member_descriptor*> members;
-
 		std::string_view name;
-		const type_descriptor* parent = nullptr;
+		std::vector<member_descriptor> members;
+		std::vector<const type_descriptor*> bases;
 
 		const detail::type_handler_base* type_handler;
 	};
@@ -102,7 +112,7 @@ namespace loupe
 	struct reflection_blob
 	{
 		template<typename Type>
-		[[nodiscard]] auto find() const -> std::conditional_t<std::is_enum_v<Type>, const enum_descriptor*, const type_descriptor*>;
+		[[nodiscard]] auto                   find() const -> std::conditional_t<std::is_enum_v<Type>, const enum_descriptor*, const type_descriptor*>;
 		[[nodiscard]] const type_descriptor* find_type(std::string_view name) const;
 		[[nodiscard]] const enum_descriptor* find_enum(std::string_view name) const;
 
@@ -110,7 +120,6 @@ namespace loupe
 
 		std::vector<type_descriptor> types;
 		std::vector<enum_descriptor> enums;
-		std::vector<member_descriptor> members;
 
 		std::vector<std::unique_ptr<detail::type_handler_base>> type_handlers;
 	};
@@ -121,6 +130,8 @@ namespace loupe
 #define LOUPE_CONCATENATE_INDIRECT(s1, s2) LOUPE_CONCATENATE(s1, s2)
 #define LOUPE_ANONYMOUS_VARIABLE(str) LOUPE_CONCATENATE_INDIRECT(str, __COUNTER__)
 
+
+/// Enums ///
 #define REFLECT_ENUM(enum_name) \
 	const auto& LOUPE_ANONYMOUS_VARIABLE(dummy_) = loupe::detail::get_enum_descriptor_tasks().emplace_back([](loupe::reflection_blob& blob) \
 	{                                                                                                                                       \
@@ -135,5 +146,14 @@ namespace loupe
 		descriptor.entires =
 #define REF_VALUE(value) { #value, static_cast<std::size_t>(value) }
 #define REF_ENUM_END ; blob.enums.push_back(std::move(descriptor)); });
+
+#define FRIEND_LOUPE
+
+/// Structures and Classes ///
+#define REFLECT(type_name)
+#define REF_BASES(...) register_bases<__VA_ARGS__()>(blob, *type);
+#define REF_BASE(...) REF_BASES(__VA_ARGS__())
+#define REF_MEMBER(member, ...) register_member<decltype(class_type::member), __VA_ARGS__()>(blob, type, "member", offsetof(class_type, member)),
+#define REF_END }; } break; } });
 
 #include "loupe.inl"
