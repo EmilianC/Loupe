@@ -20,6 +20,7 @@ if (${LOUPE_TOP_LEVEL})
 	endif()
 endif()
 
+add_subdirectory(external)
 add_subdirectory(loupe)
 
 option(LOUPE_TESTS "Build Loupe Test Executable" ${LOUPE_TOP_LEVEL})

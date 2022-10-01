@@ -9,6 +9,11 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${loupe_test_files})
 
 add_executable(unit_tests WIN32 ${loupe_test_files})
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(unit_tests
+	PUBLIC
+		catch
+		cereal
+)
 target_compile_definitions(unit_tests
 	PRIVATE
 		CATCH_CONFIG_FAST_COMPILE

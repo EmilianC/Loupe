@@ -22,3 +22,4 @@ Loupe does not require Run-Time Type Information (RRTI) or Exceptions, and is de
 
 # Test Project Dependencies
 - [Catch 2.13.9](https://github.com/catchorg/Catch2/tree/v2.x)
+- [Cereal 1.3.2](https://github.com/USCiLab/cereal)
