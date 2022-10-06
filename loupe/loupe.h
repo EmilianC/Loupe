@@ -45,8 +45,14 @@ namespace loupe
 		std::vector<void(*)(reflection_blob&)>&                          get_enum_descriptor_tasks();
 		std::vector<void(*)(reflection_blob&, type_descriptor&, stage)>& get_type_descriptor_tasks();
 
-		template<typename T> [[nodiscard]]
+		template<typename Type> [[nodiscard]]
 		consteval std::string_view get_type_name();
+
+		template<typename Type, typename... Tags> [[nodiscard]]
+		loupe::member_descriptor register_member(loupe::reflection_blob& blob, const loupe::type_descriptor& owning_type, std::string_view name, std::size_t offset);
+
+		template<typename Base> [[nodiscard]]
+		const loupe::type_descriptor* register_base(loupe::reflection_blob& blob);
 	}
 
 	struct member_descriptor
@@ -111,10 +117,11 @@ namespace loupe
 
 	struct reflection_blob
 	{
-		template<typename Type>
-		[[nodiscard]] auto                   find() const -> std::conditional_t<std::is_enum_v<Type>, const enum_descriptor*, const type_descriptor*>;
-		[[nodiscard]] const type_descriptor* find_type(std::string_view name) const;
-		[[nodiscard]] const enum_descriptor* find_enum(std::string_view name) const;
+		template<typename Type> [[nodiscard]] auto find() const -> std::conditional_t<std::is_enum_v<Type>, const enum_descriptor*, const type_descriptor*>;
+	  //template<typename Type> [[nodiscard]] auto find_type() const -> const type_descriptor*; // need this?
+	  //template<typename Type> [[nodiscard]] auto find_enum() const -> const enum_descriptor*; // need this?
+		                        [[nodiscard]] auto find_type(std::string_view name) const -> const type_descriptor*;
+								[[nodiscard]] auto find_enum(std::string_view name) const -> const enum_descriptor*;
 
 		// serialize functions
 
@@ -125,11 +132,9 @@ namespace loupe
 	};
 }
 
-
 #define LOUPE_CONCATENATE(s1, s2) s1##s2
 #define LOUPE_CONCATENATE_INDIRECT(s1, s2) LOUPE_CONCATENATE(s1, s2)
 #define LOUPE_ANONYMOUS_VARIABLE(str) LOUPE_CONCATENATE_INDIRECT(str, __COUNTER__)
-
 
 /// Enums ///
 #define REFLECT_ENUM(enum_name) \
@@ -150,10 +155,20 @@ namespace loupe
 #define FRIEND_LOUPE
 
 /// Structures and Classes ///
-#define REFLECT(type_name)
-#define REF_BASES(...) register_bases<__VA_ARGS__()>(blob, *type);
-#define REF_BASE(...) REF_BASES(__VA_ARGS__())
-#define REF_MEMBER(member, ...) register_member<decltype(class_type::member), __VA_ARGS__()>(blob, type, "member", offsetof(class_type, member)),
-#define REF_END }; } break; } });
+#define REFLECT(type_name) \
+	const auto& LOUPE_ANONYMOUS_VARIABLE(dummy_) = loupe::detail::get_type_descriptor_tasks().emplace_back([](loupe::reflection_blob& blob, loupe::type_descriptor& type, loupe::detail::stage stage) \
+	{ \
+		using class_type = type_name;\
+		switch (stage) \
+		{\
+		case loupe::detail::stage::types:\
+			type.name = #type_name;\
+		break;\
+		case loupe::detail::stage::bases_and_members:
+#define BASES ; type.bases =
+#define REF_BASE(base_type) loupe::detail::register_base<base_type>(blob),
+#define MEMBERS ; type.members =
+#define REF_MEMBER(member, ...) loupe::detail::register_member<decltype(class_type::member), __VA_ARGS__()>(blob, type, #member, offsetof(class_type, member))
+#define REF_END ;}});
 
 #include "loupe.inl"

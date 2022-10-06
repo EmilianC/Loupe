@@ -126,25 +126,28 @@ namespace loupe
 	{
 		reflection_blob blob;
 
-		auto& enum_tasks   = detail::get_enum_descriptor_tasks();
-		auto& type_tasks   = detail::get_type_descriptor_tasks();
+		auto& enum_tasks = detail::get_enum_descriptor_tasks();
+		auto& type_tasks = detail::get_type_descriptor_tasks();
 
 		blob.enums.reserve(enum_tasks.size());
+		blob.types.resize(type_tasks.size());
+		blob.type_handlers.reserve(type_tasks.size());
+
+		unsigned i = 0;
+		for (auto* func : type_tasks)
+		{
+			func(blob, blob.types[i++], detail::stage::types);
+		}
+
 		for (auto* func : enum_tasks)
 		{
 			func(blob);
 		}
 
-		blob.types.reserve(type_tasks.size());
-		blob.type_handlers.reserve(type_tasks.size());
+		i = 0;
 		for (auto* func : type_tasks)
 		{
-			func(blob, detail::stage::types);
-		}
-
-		for (auto* func : type_tasks)
-		{
-			func(blob, detail::stage::bases_and_members);
+			func(blob, blob.types[i++], detail::stage::bases_and_members);
 		}
 
 		return blob;

@@ -93,7 +93,7 @@ struct game_object : public nested::base_object, public nested::base_physics
 
 struct private_data
 {
-	FRIEND_LOUPE;
+	//FRIEND_LOUPE;
 
 protected:
 	vec3 position;
