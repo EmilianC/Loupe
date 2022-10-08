@@ -1,6 +1,9 @@
 #include "catch/catch.hpp"
+#include "archiver.h"
 #include "loupe.h"
 #include "test_data.h"
+
+#include <cereal/archives/json.hpp>
 
 TEST_CASE("Reflection Tests")
 {
@@ -235,6 +238,26 @@ TEST_CASE("Reflection Tests")
 				CHECK(descriptor->find_value_from_name("count") == nullptr);
 			}
 		}
+	}
+
+	SECTION("Serialization")
+	{
+		std::stringstream stream;
+		cereal::JSONOutputArchive archive(stream);
+
+		loupe::archiver archiver(ref, archive);
+
+		game_object object;
+		object.enabled = true;
+		object.health = 50.0f;
+		object.local_transform.position = { 1.0f, 2.0f, 3.0f };
+		object.velocity = { 0.0f, 0.0f, 1.0f };
+
+		const loupe::type_descriptor* object_type = ref.find<game_object>();
+
+		archiver.serialize(&object, object_type);
+
+		CHECK(object_type);
 	}
 
 	SECTION("Clearing Tasks")

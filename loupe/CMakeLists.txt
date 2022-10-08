@@ -1,4 +1,6 @@
 list(APPEND loupe_files
+	"archiver.cpp"
+	"archiver.h"
 	"metadata_tags.h"
 	"loupe.cpp"
 	"loupe.h"

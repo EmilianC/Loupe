@@ -1,4 +1,7 @@
 #pragma once
+#include <string>
+#include <vector>
+#include <map>
 
 struct hidden {};
 struct editor_only {};
@@ -75,6 +78,7 @@ namespace nested
 
 	struct base_object
 	{
+		std::string name;
 		transform world_transform;
 		transform local_transform;
 	};
@@ -89,6 +93,12 @@ struct game_object : public nested::base_object, public nested::base_physics
 {
 	float health = 100.0f;
 	bool enabled = true;
+};
+
+template<typename T>
+struct container
+{
+	T value;
 };
 
 struct private_data

@@ -109,6 +109,9 @@ namespace loupe
 		[[nodiscard]] bool is_a(const type_descriptor* type) const;
 
 		std::string_view name;
+		std::size_t size;
+		std::size_t alignment;
+		bool default_constructible;
 		std::vector<member_descriptor> members;
 		std::vector<const type_descriptor*> bases;
 
@@ -156,19 +159,32 @@ namespace loupe
 
 /// Structures and Classes ///
 #define REFLECT(type_name) \
-	const auto& LOUPE_ANONYMOUS_VARIABLE(dummy_) = loupe::detail::get_type_descriptor_tasks().emplace_back([](loupe::reflection_blob& blob, loupe::type_descriptor& type, loupe::detail::stage stage) \
+	const auto& LOUPE_ANONYMOUS_VARIABLE(dummy_) = loupe::detail::get_type_descriptor_tasks().emplace_back(\
+	[](loupe::reflection_blob& blob, loupe::type_descriptor& type, loupe::detail::stage stage) \
 	{ \
 		using class_type = type_name;\
 		switch (stage) \
 		{\
 		case loupe::detail::stage::types:\
 			type.name = #type_name;\
+			if constexpr (std::is_void_v<class_type>)\
+			{\
+				type.size = 0;\
+				type.alignment = 1;\
+				type.default_constructible = false;\
+			}\
+			else\
+			{ \
+				type.size = sizeof(class_type);\
+				type.alignment = alignof(class_type);\
+				type.default_constructible = std::is_default_constructible_v<class_type>;\
+			}\
 		break;\
 		case loupe::detail::stage::bases_and_members:
 #define BASES ; type.bases =
 #define REF_BASE(base_type) loupe::detail::register_base<base_type>(blob),
 #define MEMBERS ; type.members =
-#define REF_MEMBER(member, ...) loupe::detail::register_member<decltype(class_type::member), __VA_ARGS__()>(blob, type, #member, offsetof(class_type, member))
+#define REF_MEMBER(member, ...) loupe::detail::register_member<decltype(class_type::member), __VA_ARGS__>(blob, type, #member, offsetof(class_type, member))
 #define REF_END ;}});
 
 #include "loupe.inl"

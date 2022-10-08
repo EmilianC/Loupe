@@ -43,7 +43,12 @@ REFLECT_ENUM(nested::large_enum) {
 
 REFLECT(hidden) REF_END;
 REFLECT(editor_only) REF_END;
-REFLECT(nested::base_object) REF_END;
+
+REFLECT(nested::base_object)
+	MEMBERS {
+		REF_MEMBER(name)
+	}
+REF_END;
 
 REFLECT(quaternion)
 	MEMBERS {
@@ -61,5 +66,11 @@ REFLECT(game_object)
 	MEMBERS {
 		REF_MEMBER(health),
 		REF_MEMBER(enabled, editor_only)
+	}
+REF_END;
+
+REFLECT(container<int>)
+	MEMBERS {
+		REF_MEMBER(value)
 	}
 REF_END;

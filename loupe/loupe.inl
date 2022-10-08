@@ -90,6 +90,8 @@ namespace loupe
 				return true;
 			}
 		}
+
+		return false;
 	}
 
 	template<typename Type>
