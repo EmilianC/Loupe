@@ -20,10 +20,12 @@ if (${LOUPE_TOP_LEVEL})
 	endif()
 endif()
 
+option(LOUPE_TESTS "Build Loupe Test Executable" ${LOUPE_TOP_LEVEL})
+option(LOUPE_ARCHIVER_CEREAL "Include an adapter archive for serialization with cereal." ON)
+
 add_subdirectory(external)
 add_subdirectory(loupe)
 
-option(LOUPE_TESTS "Build Loupe Test Executable" ${LOUPE_TOP_LEVEL})
 if (LOUPE_TESTS)
 	add_subdirectory(tests)
 endif()

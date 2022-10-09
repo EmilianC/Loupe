@@ -1,5 +1,6 @@
 // Copyright (c) 2022 Emilian Cioca
 #pragma once
+#ifdef LOUPE_ARCHIVER_CEREAL
 #include "loupe.h"
 
 namespace loupe
@@ -60,3 +61,5 @@ namespace loupe
 		Archive* archive;
 	};
 }
+
+#endif

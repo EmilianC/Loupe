@@ -16,6 +16,10 @@ loupe_set_warnings(loupe)
 loupe_disable_rtti(loupe OPTIONAL)
 loupe_disable_exceptions(loupe OPTIONAL)
 
+if (LOUPE_ARCHIVER_CEREAL)
+	target_compile_definitions(loupe PUBLIC LOUPE_ARCHIVER_CEREAL)
+endif()
+
 option(LOUPE_PCH "Use a precompiled header file." OFF)
 if (LOUPE_PCH)
 	target_precompile_headers(loupe
