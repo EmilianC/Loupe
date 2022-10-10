@@ -140,17 +140,18 @@ namespace loupe
 #define LOUPE_ANONYMOUS_VARIABLE(str) LOUPE_CONCATENATE_INDIRECT(str, __COUNTER__)
 
 /// Enums ///
-#define REFLECT_ENUM(enum_name) \
-	const auto& LOUPE_ANONYMOUS_VARIABLE(dummy_) = loupe::detail::get_enum_descriptor_tasks().emplace_back([](loupe::reflection_blob& blob) \
-	{                                                                                                                                       \
-		using enum enum_name;                                                                                                               \
-		using underlying_type = std::underlying_type_t<enum_name>;                                                                          \
-		static_assert(sizeof(underlying_type) <= sizeof(std::size_t));                                                                      \
-		static_assert(sizeof(std::is_convertible_v<underlying_type, std::size_t>));                                                         \
-		static_assert(sizeof(std::is_convertible_v<std::size_t, underlying_type>));                                                         \
-		loupe::enum_descriptor descriptor;                                                                                                  \
-		descriptor.name = #enum_name;                                                                                                       \
-		descriptor.underlying_type = blob.find<underlying_type>();                                                                          \
+#define REFLECT_ENUM(enum_name)                                                                                    \
+	static const auto& LOUPE_ANONYMOUS_VARIABLE(dummy_) = loupe::detail::get_enum_descriptor_tasks().emplace_back( \
+	[](loupe::reflection_blob& blob)                                                                               \
+	{                                                                                                              \
+		using enum enum_name;                                                                                      \
+		using underlying_type = std::underlying_type_t<enum_name>;                                                 \
+		static_assert(sizeof(underlying_type) <= sizeof(std::size_t));                                             \
+		static_assert(sizeof(std::is_convertible_v<underlying_type, std::size_t>));                                \
+		static_assert(sizeof(std::is_convertible_v<std::size_t, underlying_type>));                                \
+		loupe::enum_descriptor descriptor;                                                                         \
+		descriptor.name = #enum_name;                                                                              \
+		descriptor.underlying_type = blob.find<underlying_type>();                                                 \
 		descriptor.entires =
 #define REF_VALUE(value) { #value, static_cast<std::size_t>(value) }
 #define REF_ENUM_END ; blob.enums.push_back(std::move(descriptor)); });
@@ -158,28 +159,28 @@ namespace loupe
 #define FRIEND_LOUPE
 
 /// Structures and Classes ///
-#define REFLECT(type_name) \
-	const auto& LOUPE_ANONYMOUS_VARIABLE(dummy_) = loupe::detail::get_type_descriptor_tasks().emplace_back(\
-	[](loupe::reflection_blob& blob, loupe::type_descriptor& type, loupe::detail::stage stage) \
-	{ \
-		using class_type = type_name;\
-		switch (stage) \
-		{\
-		case loupe::detail::stage::types:\
-			type.name = #type_name;\
-			if constexpr (std::is_void_v<class_type>)\
-			{\
-				type.size = 0;\
-				type.alignment = 1;\
-				type.default_constructible = false;\
-			}\
-			else\
-			{ \
-				type.size = sizeof(class_type);\
-				type.alignment = alignof(class_type);\
-				type.default_constructible = std::is_default_constructible_v<class_type>;\
-			}\
-		break;\
+#define REFLECT(type_name)                                                                                         \
+	static const auto& LOUPE_ANONYMOUS_VARIABLE(dummy_) = loupe::detail::get_type_descriptor_tasks().emplace_back( \
+	[](loupe::reflection_blob& blob, loupe::type_descriptor& type, loupe::detail::stage stage)                     \
+	{                                                                                                              \
+		using class_type = type_name;                                                                              \
+		switch (stage)                                                                                             \
+		{                                                                                                          \
+		case loupe::detail::stage::types:                                                                          \
+			type.name = #type_name;                                                                                \
+			if constexpr (std::is_void_v<class_type>)                                                              \
+			{                                                                                                      \
+				type.size = 0;                                                                                     \
+				type.alignment = 1;                                                                                \
+				type.default_constructible = false;                                                                \
+			}                                                                                                      \
+			else                                                                                                   \
+			{                                                                                                      \
+				type.size = sizeof(class_type);                                                                    \
+				type.alignment = alignof(class_type);                                                              \
+				type.default_constructible = std::is_default_constructible_v<class_type>;                          \
+			}                                                                                                      \
+		break;                                                                                                     \
 		case loupe::detail::stage::bases_and_members:
 #define BASES ; type.bases =
 #define REF_BASE(base_type) loupe::detail::register_base<base_type>(blob),
