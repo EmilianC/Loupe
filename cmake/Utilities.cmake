@@ -96,7 +96,7 @@ endfunction()
 
 
 # Disables Run-Time Type Information (RTTI) for the target. Accepts the [OPTIONAL] flag.
-# Changes made to the target are PUBLIC.
+# Changes made to the target are PRIVATE.
 function(loupe_disable_rtti target_name)
   cmake_parse_arguments(THIS "OPTIONAL" "" "" ${ARGN})
 
@@ -106,11 +106,11 @@ function(loupe_disable_rtti target_name)
 
   if (LOUPE_DISABLE_RTTI OR NOT THIS_OPTIONAL)
     if (MSVC)
-      target_compile_options(${target_name} PUBLIC /GR-)
+      target_compile_options(${target_name} PRIVATE /GR-)
     elseif (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
-      target_compile_options(${target_name} PUBLIC -fno-rtti)
+      target_compile_options(${target_name} PRIVATE -fno-rtti)
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      target_compile_options(${target_name} PUBLIC -fno-rtti)
+      target_compile_options(${target_name} PRIVATE -fno-rtti)
     else()
       message(AUTHOR_WARNING "RTTI could not be disabled for '${CMAKE_CXX_COMPILER_ID}' compiler.")
     endif()
@@ -119,7 +119,7 @@ endfunction()
 
 
 # Disables exceptions for the target. Accepts the [OPTIONAL] flag.
-# Changes made to the target are PUBLIC.
+# Changes made to the target are PRIVATE.
 function(loupe_disable_exceptions target_name)
   cmake_parse_arguments(THIS "OPTIONAL" "" "" ${ARGN})
 
@@ -128,14 +128,14 @@ function(loupe_disable_exceptions target_name)
   endif()
 
   if (LOUPE_DISABLE_EXCEPTIONS OR NOT THIS_OPTIONAL)
-    target_compile_definitions(${target_name} PUBLIC _HAS_EXCEPTIONS=0)
+    target_compile_definitions(${target_name} PRIVATE _HAS_EXCEPTIONS=0)
 
     if (MSVC)
-      target_compile_options(${target_name} PUBLIC /EHs-c-a-)
+      target_compile_options(${target_name} PRIVATE /EHs-c-a-)
     elseif (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
-      target_compile_options(${target_name} PUBLIC -fno-exceptions)
+      target_compile_options(${target_name} PRIVATE -fno-exceptions)
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      target_compile_options(${target_name} PUBLIC -fno-exceptions)
+      target_compile_options(${target_name} PRIVATE -fno-exceptions)
     else()
       message(AUTHOR_WARNING "Exceptions could not be disabled for '${CMAKE_CXX_COMPILER_ID}' compiler.")
     endif()
