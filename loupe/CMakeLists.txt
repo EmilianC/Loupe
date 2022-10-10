@@ -11,7 +11,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${loupe_files})
 
 add_library(loupe STATIC ${loupe_files})
 target_compile_features(loupe PUBLIC cxx_std_20)
-target_include_directories(loupe PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(loupe PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../)
 loupe_set_warnings(loupe)
 loupe_disable_rtti(loupe OPTIONAL)
 loupe_disable_exceptions(loupe OPTIONAL)
