@@ -1,5 +1,5 @@
 #include "test_data.h"
-#include "loupe.h"
+#include "loupe/loupe.h"
 
 REFLECT_ENUM(small_enum) {
 	REF_VALUE(local_space),
@@ -56,6 +56,20 @@ REFLECT(quaternion)
 		REF_MEMBER(y),
 		REF_MEMBER(z),
 		REF_MEMBER(w, hidden)
+	}
+REF_END;
+
+REFLECT(vec3)
+	MEMBERS {
+		REF_MEMBER(x),
+		REF_MEMBER(y),
+		REF_MEMBER(z)
+	}
+REF_END;
+
+REFLECT(mat3)
+	MEMBERS {
+		REF_MEMBER(data)
 	}
 REF_END;
 

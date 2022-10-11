@@ -11,13 +11,26 @@ namespace loupe
 			member.offset = offset;
 			member.owning_type = &owning_type;
 
-			if constexpr (std::is_enum_v<Type>)
+			member.is_const = std::is_const_v<Type>;
+			member.is_pointer = std::is_pointer_v<Type> || std::is_reference_v<Type>;
+
+			if constexpr (std::is_array_v<Type>)
 			{
-				member.enum_type = blob.find<Type>();
+				member.is_array = true;
+				member.element_count = std::size(Type{});
 			}
 			else
 			{
-				member.type = blob.find<Type>();
+				member.is_array = false;
+			}
+
+			if constexpr (std::is_enum_v<Type>)
+			{
+				member.enum_type = blob.find_enum<Type>();
+			}
+			else
+			{
+				member.type = blob.find_type<Type>();
 			}
 
 			if constexpr (sizeof...(Tags) > 0)
@@ -25,7 +38,7 @@ namespace loupe
 				member.metadata.reserve(sizeof...(Tags));
 
 				([&] {
-					const loupe::type_descriptor* tag_type = blob.find<Tags>();
+					const loupe::type_descriptor* tag_type = blob.find_type<Tags>();
 					// error if null.
 					member.metadata.push_back(tag_type);
 				} (), ...);
@@ -37,7 +50,7 @@ namespace loupe
 		template<typename Base>
 		const loupe::type_descriptor* register_base(loupe::reflection_blob& blob)
 		{
-			const loupe::type_descriptor* base_type = blob.find<Base>();
+			const loupe::type_descriptor* base_type = blob.find_type<Base>();
 			// error if null.
 			return base_type;
 		}
@@ -76,7 +89,7 @@ namespace loupe
 		}
 	}
 
-	template<typename Tag>
+	template<typename Tag> [[nodiscard]]
 	bool member_descriptor::has_metadata() const
 	{
 		if (metadata.empty())
@@ -94,17 +107,19 @@ namespace loupe
 		return false;
 	}
 
-	template<typename Type>
-	auto reflection_blob::find() const
-		-> std::conditional_t<std::is_enum_v<Type>, const enum_descriptor*, const type_descriptor*>
+	template<typename Type> [[nodiscard]]
+	const type_descriptor* reflection_blob::find_type() const
 	{
-		if constexpr (std::is_enum_v<Type>)
-		{
-			return find_enum(detail::get_type_name<Type>());
-		}
-		else
-		{
-			return find_type(detail::get_type_name<Type>());
-		}
+		static_assert(!std::is_enum_v<Type>);
+
+		return find_type(detail::get_type_name<Type>());
+	}
+
+	template<typename Type> [[nodiscard]]
+	const enum_descriptor* reflection_blob::find_enum() const
+	{
+		static_assert(std::is_enum_v<Type>);
+
+		return find_enum(detail::get_type_name<Type>());
 	}
 }

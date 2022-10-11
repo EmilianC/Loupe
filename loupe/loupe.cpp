@@ -16,12 +16,6 @@ namespace loupe
 			static std::vector<void(*)(reflection_blob&, type_descriptor&, stage)> tasks;
 			return tasks;
 		}
-
-		std::vector<void(*)(reflection_blob&)>& get_member_descriptor_tasks()
-		{
-			static std::vector<void(*)(reflection_blob&)> tasks;
-			return tasks;
-		}
 	}
 
 	const std::size_t* enum_descriptor::find_value_from_name(std::string_view entry_name) const
@@ -50,9 +44,23 @@ namespace loupe
 		return nullptr;
 	}
 
-	std::any type_descriptor::make_new()
+	std::any type_descriptor::construct() const
 	{
-		return {};
+		if (!default_constructible)
+			return {};
+
+		return construct_implementation();
+	}
+
+	void type_descriptor::construct_at(void* location) const
+	{
+		if (!default_constructible)
+			return;
+
+		if (reinterpret_cast<std::uintptr_t>(location) % alignment != 0)
+			return;
+
+		construct_at_implementation(location);
 	}
 
 	const member_descriptor* type_descriptor::find_member(std::string_view member_name) const
@@ -131,7 +139,6 @@ namespace loupe
 
 		blob.enums.reserve(enum_tasks.size());
 		blob.types.resize(type_tasks.size());
-		blob.type_handlers.reserve(type_tasks.size());
 
 		unsigned i = 0;
 		for (auto* func : type_tasks)
@@ -185,22 +192,19 @@ namespace loupe
 
 		return nullptr;
 	}
-
-	REFLECT(void)             REF_END;
-	REFLECT(short int)        REF_END;
-	REFLECT(int)              REF_END;
-	REFLECT(unsigned int)     REF_END;
-	REFLECT(long)             REF_END;
-	REFLECT(char)             REF_END;
-	REFLECT(unsigned char)    REF_END;
-	REFLECT(bool)             REF_END;
-	REFLECT(float)            REF_END;
-	REFLECT(double)           REF_END;
-	REFLECT(std::byte)        REF_END;
-	REFLECT(std::string)      REF_END;
-	REFLECT(std::string_view) REF_END;
-
-	// how to handle? :
-	// vectors / containers / maps
-	// smart pointers
 }
+
+REFLECT(void)             REF_END;
+REFLECT(short int)        REF_END;
+REFLECT(int)              REF_END;
+REFLECT(unsigned int)     REF_END;
+REFLECT(long)             REF_END;
+REFLECT(char)             REF_END;
+REFLECT(unsigned char)    REF_END;
+REFLECT(bool)             REF_END;
+REFLECT(float)            REF_END;
+REFLECT(double)           REF_END;
+REFLECT(std::byte)        REF_END;
+REFLECT(std::string)      REF_END;
+REFLECT(std::string_view) REF_END;
+

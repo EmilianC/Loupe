@@ -43,6 +43,11 @@ struct vec3
 	float z = 0.0f;
 };
 
+struct mat3
+{
+	float data[9] = { 0.0f };
+};
+
 namespace nested
 {
 	enum class small_enum : short

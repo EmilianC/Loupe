@@ -13,8 +13,8 @@ namespace loupe
 		archiver(const reflection_blob& blob, Archive& archive)
 			: archive(&archive)
 		{
-			int_type = blob.find<int>();
-			float_type = blob.find<float>();
+			int_type = blob.find_type<int>();
+			float_type = blob.find_type<float>();
 		}
 
 		void serialize(void* data, const type_descriptor* type)

@@ -1,6 +1,6 @@
 #include "catch/catch.hpp"
-#include "archiver.h"
-#include "loupe.h"
+#include "loupe/archiver.h"
+#include "loupe/loupe.h"
 #include "test_data.h"
 
 #include <cereal/archives/json.hpp>
@@ -16,7 +16,7 @@ TEST_CASE("Reflection Tests")
 			const loupe::enum_descriptor* descriptor = ref.find_enum("small_enum");
 			REQUIRE(descriptor);
 			CHECK(descriptor->name == "small_enum");
-			CHECK(descriptor == ref.find<small_enum>());
+			CHECK(descriptor == ref.find_enum<small_enum>());
 
 			REQUIRE(descriptor->entires.size() == 3);
 			CHECK(descriptor->entires[0].name == "local_space");
@@ -47,8 +47,8 @@ TEST_CASE("Reflection Tests")
 				const loupe::enum_descriptor* nested_descriptor = ref.find_enum("nested::small_enum");
 				REQUIRE(nested_descriptor);
 				CHECK(nested_descriptor->name == "nested::small_enum");
-				CHECK(nested_descriptor == ref.find<nested::small_enum>());
-				CHECK(nested_descriptor != ref.find<small_enum>());
+				CHECK(nested_descriptor == ref.find_enum<nested::small_enum>());
+				CHECK(nested_descriptor != ref.find_enum<small_enum>());
 				CHECK(nested_descriptor != descriptor);
 
 				REQUIRE(nested_descriptor->entires.size() == 3);
@@ -82,7 +82,7 @@ TEST_CASE("Reflection Tests")
 			const loupe::enum_descriptor* descriptor = ref.find_enum("large_enum");
 			REQUIRE(descriptor);
 			CHECK(descriptor->name == "large_enum");
-			CHECK(descriptor == ref.find<large_enum>());
+			CHECK(descriptor == ref.find_enum<large_enum>());
 
 			REQUIRE(descriptor->entires.size() == 11);
 			CHECK(descriptor->entires[0].name == "value0");
@@ -161,8 +161,8 @@ TEST_CASE("Reflection Tests")
 				const loupe::enum_descriptor* nested_descriptor = ref.find_enum("nested::large_enum");
 				REQUIRE(nested_descriptor);
 				CHECK(nested_descriptor->name == "nested::large_enum");
-				CHECK(nested_descriptor == ref.find<nested::large_enum>());
-				CHECK(nested_descriptor != ref.find<large_enum>());
+				CHECK(nested_descriptor == ref.find_enum<nested::large_enum>());
+				CHECK(nested_descriptor != ref.find_enum<large_enum>());
 				CHECK(nested_descriptor != descriptor);
 
 				REQUIRE(nested_descriptor->entires.size() == 11);
@@ -240,6 +240,16 @@ TEST_CASE("Reflection Tests")
 		}
 	}
 
+	SECTION("Structures")
+	{
+		const loupe::type_descriptor* descriptor = ref.find_type("mat3");
+		REQUIRE(descriptor);
+
+		REQUIRE(descriptor->members.size() == 1);
+		CHECK(descriptor->members[0].is_array == true);
+		CHECK(descriptor->members[0].element_count == 9);
+	}
+
 	SECTION("Serialization")
 	{
 		std::stringstream stream;
@@ -253,7 +263,7 @@ TEST_CASE("Reflection Tests")
 		object.local_transform.position = { 1.0f, 2.0f, 3.0f };
 		object.velocity = { 0.0f, 0.0f, 1.0f };
 
-		const loupe::type_descriptor* object_type = ref.find<game_object>();
+		const loupe::type_descriptor* object_type = ref.find_type<game_object>();
 
 		archiver.serialize(&object, object_type);
 
@@ -267,6 +277,5 @@ TEST_CASE("Reflection Tests")
 
 		CHECK(ref.enums.empty());
 		CHECK(ref.types.empty());
-		CHECK(ref.type_handlers.empty());
 	}
 }

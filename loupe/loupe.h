@@ -2,9 +2,7 @@
 #pragma once
 #include <any>
 #include <memory>
-#include <optional>
 #include <string_view>
-#include <variant>
 #include <vector>
 
 namespace loupe
@@ -26,21 +24,7 @@ namespace loupe
 
 	namespace detail
 	{
-		struct type_handler_base
-		{
-			virtual ~type_handler_base() {}
-		};
-
-		template<typename Type>
-		struct type_handler : public type_handler_base
-		{
-			static inline const type_descriptor* descriptor = nullptr;
-		};
-
-		enum class stage
-		{
-			types, bases_and_members
-		};
+		enum class stage { types, bases_and_members };
 
 		std::vector<void(*)(reflection_blob&)>&                          get_enum_descriptor_tasks();
 		std::vector<void(*)(reflection_blob&, type_descriptor&, stage)>& get_type_descriptor_tasks();
@@ -67,8 +51,9 @@ namespace loupe
 		bool is_const = false;
 		// Is the value an address to the type.
 		bool is_pointer = false;
-		// Is the referenced address immutable.
-		bool is_const_pointer = false;
+		// Is this member a c-style array.
+		bool is_array = false;
+		std::size_t element_count = 1;
 
 		std::vector<const type_descriptor*> metadata;
 
@@ -95,11 +80,8 @@ namespace loupe
 
 	struct type_descriptor
 	{
-		template<typename Type>
-		type_descriptor(const detail::type_handler<Type>& type_handler);
-		type_descriptor() = default;
-
-		[[nodiscard]] std::any make_new();
+		[[nodiscard]] std::any construct() const;
+		void construct_at(void* location) const;
 
 		[[nodiscard]] const member_descriptor* find_member(std::string_view member_name) const;
 		[[nodiscard]] const member_descriptor* find_member(std::size_t offset) const;
@@ -115,23 +97,19 @@ namespace loupe
 		std::vector<member_descriptor> members;
 		std::vector<const type_descriptor*> bases;
 
-		const detail::type_handler_base* type_handler;
+		std::any (*construct_implementation)() = nullptr;
+		void (*construct_at_implementation)(void*) = nullptr;
 	};
 
 	struct reflection_blob
 	{
-		template<typename Type> [[nodiscard]] auto find() const -> std::conditional_t<std::is_enum_v<Type>, const enum_descriptor*, const type_descriptor*>;
-	  //template<typename Type> [[nodiscard]] auto find_type() const -> const type_descriptor*; // need this?
-	  //template<typename Type> [[nodiscard]] auto find_enum() const -> const enum_descriptor*; // need this?
-		                        [[nodiscard]] auto find_type(std::string_view name) const -> const type_descriptor*;
-								[[nodiscard]] auto find_enum(std::string_view name) const -> const enum_descriptor*;
-
-		// serialize functions
+		template<typename Type> [[nodiscard]] const type_descriptor* find_type() const;
+								[[nodiscard]] const type_descriptor* find_type(std::string_view name) const;
+		template<typename Type> [[nodiscard]] const enum_descriptor* find_enum() const;
+								[[nodiscard]] const enum_descriptor* find_enum(std::string_view name) const;
 
 		std::vector<type_descriptor> types;
 		std::vector<enum_descriptor> enums;
-
-		std::vector<std::unique_ptr<detail::type_handler_base>> type_handlers;
 	};
 }
 
@@ -151,7 +129,7 @@ namespace loupe
 		static_assert(sizeof(std::is_convertible_v<std::size_t, underlying_type>));                                \
 		loupe::enum_descriptor descriptor;                                                                         \
 		descriptor.name = #enum_name;                                                                              \
-		descriptor.underlying_type = blob.find<underlying_type>();                                                 \
+		descriptor.underlying_type = blob.find_type<underlying_type>();                                            \
 		descriptor.entires =
 #define REF_VALUE(value) { #value, static_cast<std::size_t>(value) }
 #define REF_ENUM_END ; blob.enums.push_back(std::move(descriptor)); });
@@ -172,13 +150,21 @@ namespace loupe
 			{                                                                                                      \
 				type.size = 0;                                                                                     \
 				type.alignment = 1;                                                                                \
-				type.default_constructible = false;                                                                \
 			}                                                                                                      \
 			else                                                                                                   \
 			{                                                                                                      \
 				type.size = sizeof(class_type);                                                                    \
 				type.alignment = alignof(class_type);                                                              \
-				type.default_constructible = std::is_default_constructible_v<class_type>;                          \
+			}                                                                                                      \
+			if constexpr (std::is_default_constructible_v<class_type>)                                             \
+			{                                                                                                      \
+				type.default_constructible = true;                                                                 \
+				type.construct_implementation    = []()          { return std::make_any<class_type>(); };          \
+				type.construct_at_implementation = [](void* ptr) { new (ptr) class_type; };                        \
+			}                                                                                                      \
+			else                                                                                                   \
+			{                                                                                                      \
+				type.default_constructible = false;                                                                \
 			}                                                                                                      \
 		break;                                                                                                     \
 		case loupe::detail::stage::bases_and_members:
