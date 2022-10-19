@@ -1,17 +1,9 @@
 // Copyright (c) 2022 Emilian Cioca
 #pragma once
-#include <any>
-#include <memory>
-#include <string_view>
-#include <vector>
+#include "type_adapters.h"
 
 namespace loupe
 {
-	struct enum_descriptor;
-	struct type_descriptor;
-	struct member_descriptor;
-	struct reflection_blob;
-
 	// The starting point for retrieving reflection data. This cannot be
 	// called before main() (during static initialization). You may still
 	// store this result statically/globally in your program at the top
@@ -21,157 +13,110 @@ namespace loupe
 	// Clears the global static task lists, which will reclaim some memory.
 	// However, calling reflect() afterwards will result in an empty result.
 	void clear_reflect_tasks();
-
-	namespace detail
-	{
-		enum class stage { types, bases_and_members };
-
-		std::vector<void(*)(reflection_blob&)>&                          get_enum_descriptor_tasks();
-		std::vector<void(*)(reflection_blob&, type_descriptor&, stage)>& get_type_descriptor_tasks();
-
-		template<typename Type> [[nodiscard]]
-		consteval std::string_view get_type_name();
-
-		template<typename Type, typename... Tags> [[nodiscard]]
-		loupe::member_descriptor register_member(loupe::reflection_blob& blob, const loupe::type_descriptor& owning_type, std::string_view name, std::size_t offset);
-
-		template<typename Base> [[nodiscard]]
-		const loupe::type_descriptor* register_base(loupe::reflection_blob& blob);
-	}
-
-	struct member_descriptor
-	{
-		std::size_t offset;
-		std::string_view name;
-		const type_descriptor* type = nullptr;
-		const enum_descriptor* enum_type = nullptr;
-		const type_descriptor* owning_type;
-
-		// Can the member value be changed.
-		bool is_const = false;
-		// Is the value an address to the type.
-		bool is_pointer = false;
-		// Is this member a c-style array.
-		bool is_array = false;
-		std::size_t element_count = 1;
-
-		std::vector<const type_descriptor*> metadata;
-
-		template<typename Tag> [[nodiscard]]
-		bool has_metadata() const;
-	};
-
-	struct enum_entry
-	{
-		std::string_view name;
-		std::size_t value;
-	};
-
-	struct enum_descriptor
-	{
-		std::string_view name;
-		const type_descriptor* underlying_type;
-		std::vector<enum_entry> entires;
-
-		[[nodiscard]] const std::size_t*      find_value_from_name(std::string_view entry_name) const;
-		[[nodiscard]] const std::string_view* find_name_from_value(std::size_t value) const;
-	};
-
-
-	struct type_descriptor
-	{
-		[[nodiscard]] std::any construct() const;
-		void construct_at(void* location) const;
-
-		[[nodiscard]] const member_descriptor* find_member(std::string_view member_name) const;
-		[[nodiscard]] const member_descriptor* find_member(std::size_t offset) const;
-		[[nodiscard]] const member_descriptor* find_first_of(const type_descriptor& type) const;
-		[[nodiscard]] const member_descriptor* find_first_of(const enum_descriptor& type) const;
-
-		[[nodiscard]] bool is_a(const type_descriptor* type) const;
-
-		std::string_view name;
-		std::size_t size;
-		std::size_t alignment;
-		bool default_constructible;
-		std::vector<member_descriptor> members;
-		std::vector<const type_descriptor*> bases;
-
-		std::any (*construct_implementation)() = nullptr;
-		void (*construct_at_implementation)(void*) = nullptr;
-	};
-
-	struct reflection_blob
-	{
-		template<typename Type> [[nodiscard]] const type_descriptor* find_type() const;
-								[[nodiscard]] const type_descriptor* find_type(std::string_view name) const;
-		template<typename Type> [[nodiscard]] const enum_descriptor* find_enum() const;
-								[[nodiscard]] const enum_descriptor* find_enum(std::string_view name) const;
-
-		std::vector<type_descriptor> types;
-		std::vector<enum_descriptor> enums;
-	};
 }
+
+
+/* Reflect private variable example
+*
+#include <array>
+#include <string_view>
+#include <type_traits>
+#include <cstddef>
+
+struct test
+{
+	template<typename T, unsigned> friend struct offset_collector; // this needs to be a macro
+private:
+	int buffer[100];
+	int temp;
+};
+
+// this needs to be a macro as well, REFLECT_PRIVATE() it'll need to be outside the usual reflection block.
+template<typename T, unsigned size>
+struct offset_collector2
+{
+	using type = T;
+	static constexpr unsigned offset = size;
+};
+
+template<typename T, unsigned>
+struct offset_collector : public offset_collector2<decltype(test::temp), offsetof(test, temp)>
+{
+	using type2 = offset_collector2::type;
+	static constexpr unsigned offset2 = offset_collector2::offset;
+};
+
+int main()
+{
+	return offset_collector<int, 0>::offset2;
+}
+
+//lastly, we'll need a PRIVATE_MEMBER() macro in the main block which knows to look for the temp collector types instead of calling offsetof()
+*/
+
 
 #define LOUPE_CONCATENATE(s1, s2) s1##s2
 #define LOUPE_CONCATENATE_INDIRECT(s1, s2) LOUPE_CONCATENATE(s1, s2)
 #define LOUPE_ANONYMOUS_VARIABLE(str) LOUPE_CONCATENATE_INDIRECT(str, __COUNTER__)
 
-/// Enums ///
-#define REFLECT_ENUM(enum_name)                                                                                    \
-	static const auto& LOUPE_ANONYMOUS_VARIABLE(dummy_) = loupe::detail::get_enum_descriptor_tasks().emplace_back( \
-	[](loupe::reflection_blob& blob)                                                                               \
-	{                                                                                                              \
-		using enum enum_name;                                                                                      \
-		using underlying_type = std::underlying_type_t<enum_name>;                                                 \
-		static_assert(sizeof(underlying_type) <= sizeof(std::size_t));                                             \
-		static_assert(sizeof(std::is_convertible_v<underlying_type, std::size_t>));                                \
-		static_assert(sizeof(std::is_convertible_v<std::size_t, underlying_type>));                                \
-		loupe::enum_descriptor descriptor;                                                                         \
-		descriptor.name = #enum_name;                                                                              \
-		descriptor.underlying_type = blob.find_type<underlying_type>();                                            \
-		descriptor.entires =
-#define REF_VALUE(value) { #value, static_cast<std::size_t>(value) }
-#define REF_ENUM_END ; blob.enums.push_back(std::move(descriptor)); });
+// Allows for the use of complex template types as macro parameters.
+// Normally the ','s in a template parameter list would interfere with the macro expansion.
+#define LOUPE_TEMPLATE(...) decltype(__VA_ARGS__())
 
-#define FRIEND_LOUPE
+#define LOUPE_FRIEND template<typename T, unsigned> friend struct offset_collector;
 
-/// Structures and Classes ///
-#define REFLECT(type_name)                                                                                         \
-	static const auto& LOUPE_ANONYMOUS_VARIABLE(dummy_) = loupe::detail::get_type_descriptor_tasks().emplace_back( \
-	[](loupe::reflection_blob& blob, loupe::type_descriptor& type, loupe::detail::stage stage)                     \
-	{                                                                                                              \
-		using class_type = type_name;                                                                              \
-		switch (stage)                                                                                             \
-		{                                                                                                          \
-		case loupe::detail::stage::types:                                                                          \
-			type.name = #type_name;                                                                                \
-			if constexpr (std::is_void_v<class_type>)                                                              \
-			{                                                                                                      \
-				type.size = 0;                                                                                     \
-				type.alignment = 1;                                                                                \
-			}                                                                                                      \
-			else                                                                                                   \
-			{                                                                                                      \
-				type.size = sizeof(class_type);                                                                    \
-				type.alignment = alignof(class_type);                                                              \
-			}                                                                                                      \
-			if constexpr (std::is_default_constructible_v<class_type>)                                             \
-			{                                                                                                      \
-				type.default_constructible = true;                                                                 \
-				type.construct_implementation    = []()          { return std::make_any<class_type>(); };          \
-				type.construct_at_implementation = [](void* ptr) { new (ptr) class_type; };                        \
-			}                                                                                                      \
-			else                                                                                                   \
-			{                                                                                                      \
-				type.default_constructible = false;                                                                \
-			}                                                                                                      \
-		break;                                                                                                     \
-		case loupe::detail::stage::bases_and_members:
-#define BASES ; type.bases =
+#define REFLECT(type_name)                                                                                                                                      \
+[[maybe_unused]] static const auto& LOUPE_ANONYMOUS_VARIABLE(LOUPE_DUMMY_) =                                                                                    \
+loupe::detail::get_tasks().emplace_back(loupe::get_type_name<type_name>(), [](loupe::reflection_blob& blob, loupe::type& type, loupe::detail::task_stage stage) \
+{                                                                                                                                                               \
+	using reflected_type = type_name;                                                                                                                           \
+	switch (stage)                                                                                                                                              \
+	{                                                                                                                                                           \
+	case loupe::detail::task_stage::type_adapters:                                                                                                              \
+		if constexpr (std::is_void_v<reflected_type>)                                                                                                           \
+		{                                                                                                                                                       \
+			type.data = loupe::void_type{};                                                                                                                     \
+			type.size = 0;                                                                                                                                      \
+			type.alignment = 1;                                                                                                                                 \
+		}                                                                                                                                                       \
+		else                                                                                                                                                    \
+		{                                                                                                                                                       \
+			type.size = sizeof(reflected_type);                                                                                                                 \
+			type.alignment = alignof(reflected_type);                                                                                                           \
+			if constexpr (std::is_default_constructible_v<reflected_type>)                                                                                      \
+			{                                                                                                                                                   \
+				type.default_constructible = true;                                                                                                              \
+				type.construct_implementation = []() { return std::make_any<reflected_type>(); };                                                               \
+				type.construct_at_implementation = [](void* ptr) { new (ptr) reflected_type; };                                                                 \
+			}                                                                                                                                                   \
+			else                                                                                                                                                \
+			{                                                                                                                                                   \
+				type.default_constructible = false;                                                                                                             \
+			}                                                                                                                                                   \
+			if constexpr (loupe::array_adapter<reflected_type>::value)                                                                                          \
+				type.data = loupe::array_adapter<reflected_type>::make_data(blob);                                                                              \
+			else if constexpr (loupe::enum_adapter<reflected_type>::value)                                                                                      \
+				type.data = loupe::enum_adapter<reflected_type>::make_data(blob);                                                                               \
+			else                                                                                                                                                \
+			{                                                                                                                                                   \
+				type.data = loupe::class_type{};                                                                                                                \
+			}                                                                                                                                                   \
+		}                                                                                                                                                       \
+		break;                                                                                                                                                  \
+	case loupe::detail::task_stage::enums_bases_members:
+
+#define ENUM_VALUES           ; std::get<loupe::enum_type>(type.data).entries =
+#define REF_VALUE(value, ...) loupe::detail::register_enum_entry<__VA_ARGS__>(blob, #value, static_cast<std::size_t>(reflected_type::value))
+
+#define BASES               ; std::get<loupe::class_type>(type.data).bases =
 #define REF_BASE(base_type) loupe::detail::register_base<base_type>(blob),
-#define MEMBERS ; type.members =
-#define REF_MEMBER(member, ...) loupe::detail::register_member<decltype(class_type::member), __VA_ARGS__>(blob, type, #member, offsetof(class_type, member))
+
+#define MEMBERS                 ; std::get<loupe::class_type>(type.data).variables =
+#define REF_MEMBER(member, ...) loupe::detail::register_variable<decltype(reflected_type::member), __VA_ARGS__>(blob, #member, offsetof(reflected_type, member))
+
+#define STATIC_MEMBERS                 ; std::get<loupe::class_type>(type.data).static_variables =
+#define REF_STATIC_MEMBER(member, ...) loupe::detail::register_static_variable<decltype(reflected_type::member), __VA_ARGS__>(blob, #member, &reflected_type::member)
+
 #define REF_END ;}});
 
 #include "loupe.inl"

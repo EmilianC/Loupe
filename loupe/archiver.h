@@ -1,6 +1,6 @@
 // Copyright (c) 2022 Emilian Cioca
 #pragma once
-#ifdef LOUPE_ARCHIVER_CEREAL
+#if defined(LOUPE_ARCHIVER_CEREAL) && 0
 #include "loupe.h"
 
 namespace loupe
@@ -17,7 +17,7 @@ namespace loupe
 			float_type = blob.find_type<float>();
 		}
 
-		void serialize(void* data, const type_descriptor* type)
+		void serialize(void* data, const type* type)
 		{
 			if (type->members.empty())
 			{
@@ -32,7 +32,7 @@ namespace loupe
 			}
 			else
 			{
-				for (const member_descriptor& member : type->members)
+				for (const variable& member : type->members)
 				{
 					//if (!member.has_metadata<serializable>())
 					//	continue;

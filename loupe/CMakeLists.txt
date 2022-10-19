@@ -1,10 +1,13 @@
 list(APPEND loupe_files
 	"archiver.cpp"
 	"archiver.h"
-	"metadata_tags.h"
+	"core_data.cpp"
+	"core_data.h"
+	"core_data.inl"
 	"loupe.cpp"
 	"loupe.h"
 	"loupe.inl"
+	"type_adapters.h"
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${loupe_files})
@@ -16,17 +19,4 @@ loupe_set_warnings(loupe)
 
 if (LOUPE_ARCHIVER_CEREAL)
 	target_compile_definitions(loupe PUBLIC LOUPE_ARCHIVER_CEREAL)
-endif()
-
-option(LOUPE_PCH "Use a precompiled header file." OFF)
-if (LOUPE_PCH)
-	target_precompile_headers(loupe
-		PRIVATE
-			<any>
-			<memory>
-			<string_view>
-			<type_traits>
-			<unordered_map>
-			<vector>
-	)
 endif()

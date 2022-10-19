@@ -86,6 +86,8 @@ namespace nested
 		std::string name;
 		transform world_transform;
 		transform local_transform;
+
+		static unsigned num_objects;
 	};
 
 	struct base_physics
@@ -100,10 +102,16 @@ struct game_object : public nested::base_object, public nested::base_physics
 	bool enabled = true;
 };
 
+struct world
+{
+	std::vector<game_object> game_objects;
+};
+
 template<typename T>
 struct container
 {
 	T value;
+	static inline T static_value;
 };
 
 struct private_data
