@@ -7,6 +7,22 @@ Loupe's API is designed to be small and easy to use. Instead of scanning pre-mai
 
 The core Loupe API does not require Run-Time Type Information (RRTI) or Exceptions, and is dependent only on the C++ standard library. Serialization backends should be implemented user-side so that you can chose your own archiver and better handle custom data. However, an archiver using `Cereal` is provided by default (which can at least serve as an example for creating your own).
 
+# 1.0 Target Features
+- [ ] Diff between blobs to detect and reconcile changes
+- [ ] Support for standard containers (vector, array, map, etc.)
+- [ ] Serialization ready (bring your own archiver)
+- [x] User-defined metadata attributes
+- [x] Metadata support of enums
+
+# Post 1.0 Features
+- Reflecting and invoking functions
+- Single header include option
+- Blob coverage detection, serializing only visited properties
+- Support beyond the Windows platform
+- Debugger .natvis files
+- Support for custom allocators
+- Stateful Metadata (such as a range bound for floats)
+
 # Quick Usage
 
 ```cpp
@@ -15,8 +31,8 @@ struct hidden {};
 
 enum class small_enum
 {
-	value0 = 0,
-	value1 = 1,
+	value0,
+	value1,
 	COUNT
 };
 
@@ -62,7 +78,7 @@ int main()
 	for (const loupe::enum_entry& entry : data.entires)
 	{
 		print(entry.name);                   // "value0", "value1", "COUNT"
-		print(entry.value);                  //  0,        0,        1
+		print(entry.value);                  //  0,        1,        2
 		print(entry.has_metadata<hidden>()); // "false",  "false",  "true"
 	}
 
@@ -87,22 +103,6 @@ int main()
 	);
 }
 ```
-
-# 1.0 Target Features
-- Diff between blobs to detect and reconcile changes
-- Support for standard containers (vector, array, map, etc.)
-- Serialization ready (bring your own archiver)
-- User-defined metadata attributes
-- metadata support of enums
-
-# Post 1.0 Features
-- Reflecting and invoking functions
-- Single header include option
-- Blob coverage detection, serializing only visited properties
-- Support beyond the Windows platform
-- Debugger .natvis files
-- Support for custom allocators
-- Stateful Metadata (such as a range bound for floats)
 
 # Default Serialization Dependencies
 - [Cereal 1.3.2](https://github.com/USCiLab/cereal)
