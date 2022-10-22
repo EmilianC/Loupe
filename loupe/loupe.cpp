@@ -9,7 +9,12 @@ namespace loupe
 	{
 		std::vector<task>& get_tasks()
 		{
-			static std::vector<task> tasks;
+			static std::vector<task> tasks = []() {
+				std::vector<task> storage;
+				storage.reserve(128);
+				return storage;
+			}();
+
 			return tasks;
 		}
 	}
@@ -59,17 +64,3 @@ namespace loupe
 		detail::get_tasks().clear();
 	}
 }
-
-REFLECT(void)             REF_END;
-REFLECT(short int)        REF_END;
-REFLECT(int)              REF_END;
-REFLECT(unsigned int)     REF_END;
-REFLECT(long)             REF_END;
-REFLECT(char)             REF_END;
-REFLECT(unsigned char)    REF_END;
-REFLECT(bool)             REF_END;
-REFLECT(float)            REF_END;
-REFLECT(double)           REF_END;
-REFLECT(std::byte)        REF_END;
-REFLECT(std::string)      REF_END;
-REFLECT(std::string_view) REF_END;

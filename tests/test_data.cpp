@@ -16,7 +16,7 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<quaternion>(), [](l
 	case loupe::detail::task_stage::type_adapters:
 		if constexpr (std::is_void_v<reflected_type>)
 		{
-			type.data = loupe::void_type{};
+			type.data = loupe::fundamental_type{};
 			type.size = 0;
 			type.alignment = 1;
 		}
@@ -39,11 +39,11 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<quaternion>(), [](l
 				type.data = loupe::array_adapter<reflected_type>::make_data(blob);
 			else if constexpr (loupe::enum_adapter<reflected_type>::value)
 				type.data = loupe::enum_adapter<reflected_type>::make_data(blob);
-			//...
-			else
-			{
+			else if constexpr (std::is_class_v<reflected_type>)
 				type.data = loupe::class_type{};
-			}
+			else if constexpr (std::is_fundamental_v<reflected_type>)
+				type.data = loupe::fundamental_type{};
+			//else assert(false)
 		}
 		break;
 	case loupe::detail::task_stage::enums_bases_members:
@@ -116,6 +116,7 @@ REFLECT(vec3) MEMBERS {
 	REF_MEMBER(z)
 } REF_END;
 
+REFLECT(float[9]) REF_END;
 REFLECT(mat3) MEMBERS {
 	REF_MEMBER(data)
 } REF_END;

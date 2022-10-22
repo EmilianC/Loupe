@@ -12,16 +12,17 @@ The core Loupe API does not require Run-Time Type Information (RRTI) or Exceptio
 - [ ] Support for standard containers (vector, array, map, etc.)
 - [ ] Serialization ready (bring your own archiver)
 - [x] User-defined metadata attributes
-- [x] Metadata support of enums
 
 # Post 1.0 Features
 - Reflecting and invoking functions
+- Automatic type registration (no need to reflect vector<my_class>, float[9] etc.)
 - Single header include option
 - Blob coverage detection, serializing only visited properties
 - Support beyond the Windows platform
 - Debugger .natvis files
 - Support for custom allocators
 - Stateful Metadata (such as a range bound for floats)
+- Versioning for serialized blobs
 
 # Quick Usage
 
@@ -99,7 +100,8 @@ int main()
 		[&](const loupe::pointer_type& data) { /*...*/ },
 		[&](const loupe::array_type& data) { /*...*/ },
 		[&](const loupe::map_type& data) { /*...*/ },
-		[&](const loupe::void_type& data) { /*...*/ },
+		[&](const loupe::variant_type& data) { /*...*/ },
+		[&](const loupe::fundamental_type& data) { /*...*/ }
 	);
 }
 ```

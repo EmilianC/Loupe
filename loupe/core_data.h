@@ -116,9 +116,15 @@ namespace loupe
 	};
 
 	//
-	struct void_type
+	struct variant_type
 	{
+		std::vector<const type*> alternatives;
+
+		std::size_t (*get_index_implementation)(const void* variant);
 	};
+
+	//
+	struct fundamental_type {};
 
 	//
 	struct type
@@ -128,7 +134,7 @@ namespace loupe
 		std::size_t alignment;
 		bool default_constructible;
 
-		std::variant<class_type, enum_type, pointer_type, array_type, map_type, void_type> data;
+		std::variant<class_type, enum_type, pointer_type, array_type, map_type, variant_type, fundamental_type> data;
 
 		[[nodiscard]] bool is_a(const type&) const;
 
