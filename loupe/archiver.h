@@ -1,6 +1,5 @@
 // Copyright (c) 2022 Emilian Cioca
 #pragma once
-#if defined(LOUPE_ARCHIVER_CEREAL) && 0
 #include "loupe.h"
 
 namespace loupe
@@ -13,33 +12,33 @@ namespace loupe
 		archiver(const reflection_blob& blob, Archive& archive)
 			: archive(&archive)
 		{
-			int_type = blob.find_type<int>();
-			float_type = blob.find_type<float>();
+			int_type = blob.find<int>();
+			float_type = blob.find<float>();
 		}
 
 		void serialize(void* data, const type* type)
 		{
-			if (type->members.empty())
-			{
-				if (type == int_type)
-				{
-					serialize(static_cast<int*>(data));
-				}
-				else if (type == float_type)
-				{
-					serialize(static_cast<int*>(data));
-				}
-			}
-			else
-			{
-				for (const variable& member : type->members)
-				{
-					//if (!member.has_metadata<serializable>())
-					//	continue;
-
-					serialize(static_cast<std::byte*>(data) + member.offset, member.type);
-				}
-			}
+			//if (type->members.empty())
+			//{
+			//	if (type == int_type)
+			//	{
+			//		serialize(static_cast<int*>(data));
+			//	}
+			//	else if (type == float_type)
+			//	{
+			//		serialize(static_cast<int*>(data));
+			//	}
+			//}
+			//else
+			//{
+			//	for (const variable& member : type->members)
+			//	{
+			//		//if (!member.has_metadata<serializable>())
+			//		//	continue;
+			//	
+			//		serialize(static_cast<std::byte*>(data) + member.offset, member.type);
+			//	}
+			//}
 		}
 
 		void serialize(short int data)        { (*archive)(data); }
@@ -55,11 +54,9 @@ namespace loupe
 		void serialize(std::string data)      { (*archive)(data); }
 		void serialize(std::string_view data) { (*archive)(data); }
 
-		const type_descriptor* int_type;
-		const type_descriptor* float_type;
+		const type* int_type;
+		const type* float_type;
 
 		Archive* archive;
 	};
 }
-
-#endif
