@@ -6,7 +6,7 @@ namespace nested
 	unsigned base_object::num_objects = 0;
 }
 
-// This is reflected without macros just to make it easier to iterate in development. 
+// This is reflected without macros just to make it easier to iterate in development.
 [[maybe_unused]] static const auto& manually_expanded =
 loupe::detail::get_tasks().emplace_back(loupe::get_type_name<quaternion>(), [](loupe::reflection_blob& blob, loupe::type& type, loupe::detail::task_stage stage)
 {
@@ -26,15 +26,12 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<quaternion>(), [](l
 			type.alignment = alignof(reflected_type);
 			if constexpr (std::is_default_constructible_v<reflected_type>)
 			{
-				type.default_constructible = true;
-				type.construct_implementation = []() { return std::make_any<reflected_type>(); };
-				type.construct_at_implementation = [](void* ptr) { new (ptr) reflected_type; };
+				type.construct = []() { return std::make_any<reflected_type>(); };
+				type.construct_at = [](void* location) {
+					//*assert(reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) != 0);*/
+					new (location) reflected_type;
+				};
 			}
-			else
-			{
-				type.default_constructible = false;
-			}
-
 			if constexpr (loupe::array_adapter<reflected_type>::value)
 				type.data = loupe::array_adapter<reflected_type>::make_data(blob);
 			else if constexpr (loupe::enum_adapter<reflected_type>::value)

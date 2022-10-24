@@ -10,48 +10,37 @@ namespace loupe
 {
 	struct type;
 
-	//
-	struct enum_entry
+	struct metadata_container
 	{
-		std::string_view name;
-		std::size_t value;
-
-		std::vector<const type*> metadata;
-
 		template<typename Tag> [[nodiscard]]
 		bool has_metadata() const;
+
+		std::vector<const type*> metadata;
 	};
 
 	//
-	struct variable
+	struct enum_entry : public metadata_container
+	{
+		std::string_view name;
+		std::size_t value;
+	};
+
+	//
+	struct variable : public metadata_container
 	{
 		std::string_view name;
 		std::size_t offset;
 		const type* type = nullptr;
-
-		// Can the value be changed.
 		bool is_const = false;
-
-		std::vector<const struct type*> metadata;
-
-		template<typename Tag> [[nodiscard]]
-		bool has_metadata() const;
 	};
 
 	//
-	struct static_variable
+	struct static_variable : public metadata_container
 	{
 		std::string_view name;
 		void* address = nullptr;
 		const type* type = nullptr;
-
-		// Can the value be changed.
 		bool is_const = false;
-
-		std::vector<const struct type*> metadata;
-
-		template<typename Tag> [[nodiscard]]
-		bool has_metadata() const;
 	};
 
 	//
@@ -81,26 +70,23 @@ namespace loupe
 	struct pointer_type
 	{
 		const type* target_type = nullptr;
-		bool is_target_const;
+		bool is_target_const = false;
 
-		void* dereference();
-
-		// detail.
-		void* (*dereference_implementation)(void*);
+		void* (*dereference)(void* pointer) = nullptr;
 	};
 
 	//
 	struct array_type
 	{
 		const type* element_type = nullptr;
-		bool dynamic;
+		bool dynamic = false;
 
-		std::size_t (*get_count_implementation)(const void* array) = nullptr;
-		bool  (*empty_implementation)(const void* array) = nullptr;
-		bool  (*contains_implementation)(const void* array, const void* data) = nullptr;
-		void* (*get_at_implementation)(void* array, std::size_t index) = nullptr;
-		void  (*set_at_implementation)(void* array, std::size_t index, const void* data) = nullptr;
-		void* (*emplace_back_implementation)(void* array, const void* data) = nullptr;
+		std::size_t (*get_count)(const void* array) = nullptr;
+		bool (*empty)(const void* array) = nullptr;
+		bool (*contains)(const void* array, const void* data) = nullptr;
+		const void* (*get_at)(const void* array, std::size_t index) = nullptr;
+		void (*set_at)(void* array, std::size_t index, const void* data) = nullptr;
+		void (*emplace_back)(void* array, const void* data) = nullptr;
 	};
 
 	//
@@ -109,10 +95,10 @@ namespace loupe
 		const type* key_type = nullptr;
 		const type* value_type = nullptr;
 
-		std::size_t (*get_count_implementation)(const void* array);
-		bool  (*contains_implementation)(const void* array);
-		void* (*find_implementation)(void* array, const void* key);
-		void  (*insert_implementation)(void* array, const void* key, const void* value);
+		std::size_t (*get_count)(const void* map) = nullptr;
+		bool  (*contains)(const void* map) = nullptr;
+		void* (*find)(void* map, const void* key) = nullptr;
+		void  (*insert)(void* map, const void* key, const void* value) = nullptr;
 	};
 
 	//
@@ -120,7 +106,9 @@ namespace loupe
 	{
 		std::vector<const type*> alternatives;
 
-		std::size_t (*get_index_implementation)(const void* variant);
+		bool (*holds_value)(const void* variant) = nullptr;
+		std::size_t (*get_index)(const void* variant) = nullptr;
+		void* (*get_value)(void* variant) = nullptr;
 	};
 
 	//
@@ -132,20 +120,16 @@ namespace loupe
 		std::string_view name;
 		std::size_t size;
 		std::size_t alignment;
-		bool default_constructible;
 
 		std::variant<class_type, enum_type, pointer_type, array_type, map_type, variant_type, fundamental_type> data;
 
 		[[nodiscard]] bool is_a(const type&) const;
 
-		[[nodiscard]] std::any construct() const;
-		void construct_at(void* location) const;
-
 		template<typename... Visitors>
 		auto visit(Visitors&&... visitors) const;
 
-		std::any (*construct_implementation)() = nullptr;
-		void (*construct_at_implementation)(void*) = nullptr;
+		std::any (*construct)() = nullptr;
+		void (*construct_at)(void* location) = nullptr;
 	};
 
 	//

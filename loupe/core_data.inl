@@ -52,31 +52,11 @@ namespace loupe
 	}
 
 	template<typename Tag> [[nodiscard]]
-	bool enum_entry::has_metadata() const
+	bool metadata_container::has_metadata() const
 	{
-		if (metadata.empty())
-			return false;
-
-		for (const type* data : metadata)
+		for (const type* tag : metadata)
 		{
-			if (get_type_name<Tag>() == data->name)
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	template<typename Tag> [[nodiscard]]
-	bool variable::has_metadata() const
-	{
-		if (metadata.empty())
-			return false;
-
-		for (const struct type* data : metadata)
-		{
-			if (get_type_name<Tag>() == data->name)
+			if (get_type_name<Tag>() == tag->name)
 			{
 				return true;
 			}

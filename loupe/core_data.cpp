@@ -4,21 +4,6 @@
 
 namespace loupe
 {
-	std::any type::construct() const
-	{
-		// assert(default_constructible)
-
-		return construct_implementation();
-	}
-
-	void type::construct_at(void* location) const
-	{
-		// assert(default_constructible)
-		// assert(reinterpret_cast<std::uintptr_t>(location) % alignment != 0)
-
-		construct_at_implementation(location);
-	}
-
 	bool class_type::is_derived_from(const type& type) const
 	{
 		for (const struct type* base : bases)
@@ -205,7 +190,6 @@ REFLECT(loupe::type) MEMBERS {
 	REF_MEMBER(name),
 	REF_MEMBER(size),
 	REF_MEMBER(alignment),
-	REF_MEMBER(default_constructible),
 	REF_MEMBER(data)
 } REF_END;
 

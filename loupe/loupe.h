@@ -85,13 +85,11 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<type_name>(), [](lo
 			type.alignment = alignof(reflected_type);                                                                                                           \
 			if constexpr (std::is_default_constructible_v<reflected_type>)                                                                                      \
 			{                                                                                                                                                   \
-				type.default_constructible = true;                                                                                                              \
-				type.construct_implementation = []() { return std::make_any<reflected_type>(); };                                                               \
-				type.construct_at_implementation = [](void* ptr) { new (ptr) reflected_type; };                                                                 \
-			}                                                                                                                                                   \
-			else                                                                                                                                                \
-			{                                                                                                                                                   \
-				type.default_constructible = false;                                                                                                             \
+				type.construct = []() { return std::make_any<reflected_type>(); };                                                                              \
+				type.construct_at = [](void* location) {                                                                                                        \
+					/*assert(reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) != 0);*/                                                      \
+					new (location) reflected_type;                                                                                                              \
+				};                                                                                                                                              \
 			}                                                                                                                                                   \
 			if constexpr (loupe::array_adapter<reflected_type>::value)                                                                                          \
 				type.data = loupe::array_adapter<reflected_type>::make_data(blob);                                                                              \

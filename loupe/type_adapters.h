@@ -27,10 +27,10 @@ namespace loupe
 			return {
 				.element_type = element_type,
 				.dynamic = false,
-				.get_count_implementation = [](const void*) { return ElementCount; },
-				.empty_implementation     = [](const void*) { return false; },
+				.get_count = [](const void*) { return ElementCount; },
+				.empty     = [](const void*) { return false; },
 
-				.contains_implementation  = [](const void* array, const void* data) {
+				.contains  = [](const void* array, const void* data) {
 					auto* element = static_cast<const ElementType*>(data);
 					auto* begin   = static_cast<const ElementType*>(array);
 					auto* end     = begin + ElementCount;
@@ -38,14 +38,14 @@ namespace loupe
 					return std::find(begin, end, *element) != nullptr;
 				},
 
-				.get_at_implementation = [](void* array, std::size_t index) -> void* {
+				.get_at = [](const void* array, std::size_t index) -> const void* {
 					// assert (index < ElementCount)
 
-					auto* begin = static_cast<ElementType*>(array);
+					auto* begin = static_cast<const ElementType*>(array);
 					return begin + index;
 				},
 
-				.set_at_implementation = [](void* array, std::size_t index, const void* data) {
+				.set_at = [](void* array, std::size_t index, const void* data) {
 					// assert (index < ElementCount)
 
 					auto* begin   = static_cast<ElementType*>(array);
@@ -70,15 +70,15 @@ namespace loupe
 			return {
 				.element_type = element_type,
 				.dynamic = true,
-				.get_count_implementation = [](const void* array) {
+				.get_count = [](const void* array) {
 					return static_cast<const ArrayType*>(array)->size();
 				},
 
-				.empty_implementation = [](const void* array) {
+				.empty = [](const void* array) {
 					return static_cast<const ArrayType*>(array)->empty();
 				},
 
-				.contains_implementation = [](const void* array, const void* data) {
+				.contains = [](const void* array, const void* data) {
 					if constexpr (std::equality_comparable<ElementType>)
 					{
 						auto* vec     = static_cast<const ArrayType*>(array);
@@ -92,23 +92,23 @@ namespace loupe
 					}
 				},
 
-				.get_at_implementation = [](void* array, std::size_t index) -> void* {
-					auto* vec = static_cast<ArrayType*>(array);
+				.get_at = [](const void* array, std::size_t index) -> const void* {
+					auto* vec = static_cast<const ArrayType*>(array);
 
 					return &(*vec)[index];
 				},
 
-				.set_at_implementation = [](void* array, std::size_t index, const void* data) {
+				.set_at = [](void* array, std::size_t index, const void* data) {
 					auto* vec     = static_cast<ArrayType*>(array);
 					auto* element = static_cast<const ElementType*>(data);
 
 					(*vec)[index] = *element;
 				},
 
-				.emplace_back_implementation = [](void* array, const void* data) -> void* {
+				.emplace_back = [](void* array, const void* data) {
 					auto* vec     = static_cast<ArrayType*>(array);
 					auto* element = static_cast<const ElementType*>(data);
-					return &vec->emplace_back(*element);
+					vec->emplace_back(*element);
 				}
 			};
 		}
@@ -127,21 +127,21 @@ namespace loupe
 			return {
 				.element_type = element_type,
 				.dynamic = false
-				.get_count_implementation = [](const void*) { return ElementCount; },
-				.empty_implementation     = [](const void*) { return false; },
+				.get_count = [](const void*) { return ElementCount; },
+				.empty     = [](const void*) { return false; },
 
-				.contains_implementation = [](const void* array, const void* data) {
+				.contains = [](const void* array, const void* data) {
 					auto* vec     = static_cast<const ArrayType*>(array);
 					auto* element = static_cast<const ElementType*>(data);
 					return std::find(vec->begin(), vec->end(), *element) != vec->end();
 				},
 
-				.get_at_implementation = [](void* array, std::size_t index) -> void* {
-					auto* vec = static_cast<ArrayType*>(array);
+				.get_at = [](const void* array, std::size_t index) -> const void* {
+					auto* vec = static_cast<const ArrayType*>(array);
 					return &(*vec)[index];
 				},
 
-				.set_at_implementation = [](void* array, std::size_t index, const void* data) {
+				.set_at = [](void* array, std::size_t index, const void* data) {
 					auto* vec     = static_cast<ArrayType*>(array);
 					auto* element = static_cast<const ElementType*>(data);
 
@@ -164,29 +164,29 @@ namespace loupe
 			return {
 				.element_type = element_type,
 				.dynamic = true
-				.get_count_implementation = [](const void* array) {
+				.get_count = [](const void* array) {
 					return static_cast<const ArrayType*>(array)->size();
 				},
 
-				.empty_implementation = [](const void* array) {
+				.empty = [](const void* array) {
 					return static_cast<const ArrayType*>(array)->empty();
 				},
 
-				.contains_implementation = [](const void* array, const void* data) {
+				.contains = [](const void* array, const void* data) {
 					auto* list    = static_cast<const ArrayType*>(array);
 					auto* element = static_cast<const ElementType*>(data);
 					return std::find(list->begin(), list->end(), *element) != list->end();
 				},
 
-				.get_at_implementation = [](void* array, std::size_t index) -> void* {
-					auto* list = static_cast<ArrayType*>(array);
+				.get_at = [](const void* array, std::size_t index) -> const void* {
+					auto* list = static_cast<const ArrayType*>(array);
 					auto itr   = list->begin();
 					itr = std::next(itr, index);
 
 					return *itr;
 				},
 
-				.set_at_implementation = [](void* array, std::size_t index, const void* data) {
+				.set_at = [](void* array, std::size_t index, const void* data) {
 					auto* list    = static_cast<ArrayType*>(array);
 					auto* element = static_cast<const ElementType*>(data);
 					auto itr      = list->begin();
@@ -195,10 +195,10 @@ namespace loupe
 					*itr = *element;
 				},
 
-				.emplace_back_implementation = [](void* array, const void* data) -> void* {
+				.emplace_back = [](void* array, const void* data) {
 					auto* list    = static_cast<ArrayType*>(array);
 					auto* element = static_cast<const ElementType*>(data);
-					return &list->emplace_back(*element);
+					list->emplace_back(*element);
 				}
 			};
 		}
@@ -218,37 +218,74 @@ namespace loupe
 			return {
 				.element_type = element_type,
 				.dynamic = true,
-				.get_count_implementation = [](const void* array) {
+				.get_count = [](const void* array) {
 					return static_cast<const ArrayType*>(array)->size();
 				},
 
-				.empty_implementation = [](const void* array) {
+				.empty = [](const void* array) {
 					return static_cast<const ArrayType*>(array)->empty();
 				},
 
-				.contains_implementation = [](const void* array, const void* data) {
+				.contains = [](const void* array, const void* data) {
 					auto* string  = static_cast<const ArrayType*>(array);
 					auto* element = static_cast<const ElementType*>(data);
 					return std::find(string->begin(), string->end(), *element) != string->end();
 				},
 
-				.get_at_implementation = [](void* array, std::size_t index) -> void* {
-					auto* string = static_cast<ArrayType*>(array);
+				.get_at = [](const void* array, std::size_t index) -> const void* {
+					auto* string = static_cast<const ArrayType*>(array);
 					return &(*string)[index];
 				},
 
-				.set_at_implementation = [](void* array, std::size_t index, const void* data) {
+				.set_at = [](void* array, std::size_t index, const void* data) {
 					auto* string  = static_cast<ArrayType*>(array);
 					auto* element = static_cast<const ElementType*>(data);
 
 					(*string)[index] = *element;
 				},
 
-				.emplace_back_implementation = [](void* array, const void* data) -> void* {
+				.emplace_back = [](void* array, const void* data) {
 					auto* string  = static_cast<ArrayType*>(array);
 					auto* element = static_cast<const ElementType*>(data);
 					string->push_back(*element);
-					return &string->back();
+				}
+			};
+		}
+	};
+
+	template<>
+	struct array_adapter<std::string_view> : public std::true_type
+	{
+		using ArrayType = std::string_view;
+		using ElementType = char;
+
+		[[nodiscard]] static array_type make_data(const reflection_blob& blob)
+		{
+			const loupe::type* element_type = blob.find<ElementType>();
+			// assert(element_type)
+
+			return {
+				.element_type = element_type,
+				.dynamic = false,
+				.get_count = [](const void* array) {
+					return static_cast<const ArrayType*>(array)->size();
+				},
+
+				.empty = [](const void* array) {
+					return static_cast<const ArrayType*>(array)->empty();
+				},
+
+				.contains = [](const void* array, const void* data) {
+					auto* string  = static_cast<const ArrayType*>(array);
+					auto* element = static_cast<const ElementType*>(data);
+					return std::find(string->begin(), string->end(), *element) != string->end();
+				},
+
+				.get_at = [](const void* array, std::size_t index) -> const void* {
+					auto* string = static_cast<const ArrayType*>(array);
+					// assert(index < string->size())
+
+					return string->data() + index;
 				}
 			};
 		}
