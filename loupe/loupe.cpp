@@ -34,7 +34,7 @@ namespace loupe
 		auto itr = std::adjacent_find(tasks.begin(), tasks.end(), [](const detail::task& left, const detail::task& right) {
 			return left.name == right.name;
 		});
-		//assert(itr == tasks.end())
+		LOUPE_ASSERT(itr == tasks.end(), "A type has been reflected multiple times.");
 #endif
 
 		blob.types.resize(tasks.size());

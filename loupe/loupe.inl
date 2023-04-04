@@ -26,18 +26,19 @@ namespace loupe
 				.name = name,
 				.value = value
 			};
-		
+
 			if constexpr (sizeof...(Tags) > 0)
 			{
 				entry.metadata.reserve(sizeof...(Tags));
-		
+
 				([&] {
 					const type* tag_type = blob.find<Tags>();
-					// assert(tag_type)
+					LOUPE_ASSERT(tag_type, "Metadata tag was not registered. Metadata tags must also be reflected separately.");
+
 					entry.metadata.push_back(tag_type);
 				} (), ...);
 			}
-		
+
 			return entry;
 		}
 
@@ -57,7 +58,8 @@ namespace loupe
 
 				([&] {
 					const type* tag_type = blob.find<Tags>();
-					// assert(tag_type)
+					LOUPE_ASSERT(tag_type, "Metadata tag was not registered. Metadata tags must also be reflected separately.");
+
 					variable.metadata.push_back(tag_type);
 				} (), ...);
 			}
@@ -81,7 +83,8 @@ namespace loupe
 
 				([&] {
 					const type* tag_type = blob.find<Tags>();
-					// assert(tag_type)
+					LOUPE_ASSERT(tag_type, "Metadata tag was not registered. Metadata tags must also be reflected separately.");
+
 					variable.metadata.push_back(tag_type);
 				} (), ...);
 			}
@@ -93,7 +96,8 @@ namespace loupe
 		const type* register_base(reflection_blob& blob)
 		{
 			const type* base_type = blob.find<Base>();
-			// assert(base_type)
+			LOUPE_ASSERT(base_type, "Base class type not registered. Base classes must also be reflected separately.");
+
 			return base_type;
 		}
 	}

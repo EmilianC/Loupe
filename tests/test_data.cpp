@@ -28,7 +28,7 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<quaternion>(), [](l
 			{
 				type.construct = []() { return std::make_any<reflected_type>(); };
 				type.construct_at = [](void* location) {
-					//*assert(reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) != 0);*/
+					LOUPE_ASSERT(reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) != 0, "Construction location for type is misaligned.");
 					new (location) reflected_type;
 				};
 			}
@@ -40,7 +40,7 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<quaternion>(), [](l
 				type.data = loupe::class_type{};
 			else if constexpr (std::is_fundamental_v<reflected_type>)
 				type.data = loupe::fundamental_type{};
-			//else assert(false)
+			else LOUPE_ASSERT(false, "Unrecognized type category.");
 		}
 		break;
 	case loupe::detail::task_stage::enums_bases_members:

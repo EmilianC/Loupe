@@ -1,5 +1,6 @@
 // Copyright (c) 2022 Emilian Cioca
 #pragma once
+#include "assert.h"
 #include "core_data.h"
 
 #include <concepts>
@@ -22,7 +23,7 @@ namespace loupe
 		[[nodiscard]] static array_type make_data(loupe::reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
-			// assert(element_type)
+			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
 
 			return {
 				.element_type = element_type,
@@ -39,14 +40,14 @@ namespace loupe
 				},
 
 				.get_at = [](const void* array, std::size_t index) -> const void* {
-					// assert (index < ElementCount)
+					LOUPE_ASSERT(index < ElementCount, "Index was out of bounds.");
 
 					auto* begin = static_cast<const ElementType*>(array);
 					return begin + index;
 				},
 
 				.set_at = [](void* array, std::size_t index, const void* data) {
-					// assert (index < ElementCount)
+					LOUPE_ASSERT(index < ElementCount, "Index was out of bounds.");
 
 					auto* begin   = static_cast<ElementType*>(array);
 					auto* element = static_cast<const ElementType*>(data);
@@ -61,11 +62,12 @@ namespace loupe
 	struct array_adapter<std::vector<ElementType>> : public std::true_type
 	{
 		using ArrayType = std::vector<ElementType>;
+		static_assert(!std::is_same_v<ElementType, bool>, "Loupe doesn't support reflecting \"std::vector<bool>\".");
 
 		[[nodiscard]] static array_type make_data(const reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
-			// assert(element_type)
+			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
 
 			return {
 				.element_type = element_type,
@@ -87,7 +89,7 @@ namespace loupe
 					}
 					else
 					{
-						// assert(false)
+						LOUPE_ASSERT(false, "contains() could not be executed for the array. The elements are not comparable.");
 						return false;
 					}
 				},
@@ -122,7 +124,7 @@ namespace loupe
 		[[nodiscard]] static array_type make_data(const reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
-			// assert(element_type)
+			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
 
 			return {
 				.element_type = element_type,
@@ -159,7 +161,7 @@ namespace loupe
 		[[nodiscard]] static array_type make_data(const reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
-			// assert(element_type)
+			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
 
 			return {
 				.element_type = element_type,
@@ -213,7 +215,7 @@ namespace loupe
 		[[nodiscard]] static array_type make_data(const reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
-			// assert(element_type)
+			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
 
 			return {
 				.element_type = element_type,
@@ -262,7 +264,7 @@ namespace loupe
 		[[nodiscard]] static array_type make_data(const reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
-			// assert(element_type)
+			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
 
 			return {
 				.element_type = element_type,
@@ -283,7 +285,7 @@ namespace loupe
 
 				.get_at = [](const void* array, std::size_t index) -> const void* {
 					auto* string = static_cast<const ArrayType*>(array);
-					// assert(index < string->size())
+					LOUPE_ASSERT(index < string->size(), "The index provided to get_at() was out of bounds.");
 
 					return string->data() + index;
 				}
@@ -307,7 +309,8 @@ namespace loupe
 			static enum_type make_data(const reflection_blob& blob)
 			{
 				const loupe::type* underlying_type = blob.find<UnderlyingType>();
-				// assert(underlying_type)
+				LOUPE_ASSERT(underlying_type, "The enum's underlying type was not registered. It must be reflected separately.");
+
 				return { .underlying_type = underlying_type };
 			}
 		};

@@ -22,6 +22,7 @@ endif()
 
 option(LOUPE_TESTS "Build Loupe Test Executable" ${LOUPE_TOP_LEVEL})
 option(LOUPE_ARCHIVER_CEREAL "Include an adapter archive for serialization with cereal." ON)
+option(LOUPE_ENABLE_ASSERTS "Whether or not errors are signaled with a c-asserts (in debug builds)." ON)
 
 add_subdirectory(external)
 add_subdirectory(loupe)
