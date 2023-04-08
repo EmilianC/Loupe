@@ -7,10 +7,11 @@ namespace nested
 }
 
 // This is reflected without macros just to make it easier to iterate in development.
+static_assert(!std::is_reference_v<quaternion>, "References cannot be reflected.");
 [[maybe_unused]] static const auto& manually_expanded =
 loupe::detail::get_tasks().emplace_back(loupe::get_type_name<quaternion>(), [](loupe::reflection_blob& blob, loupe::type& type, loupe::detail::task_stage stage)
 {
-	using reflected_type = quaternion;
+	using reflected_type = std::remove_cv_t<quaternion>;
 	switch (stage)
 	{
 	case loupe::detail::task_stage::type_adapters:

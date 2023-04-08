@@ -67,10 +67,11 @@ int main()
 #define LOUPE_FRIEND template<typename T, unsigned> friend struct offset_collector;
 
 #define REFLECT(type_name)                                                                                                                                      \
+static_assert(!std::is_reference_v<type_name>, "References cannot be reflected.");                                                                              \
 [[maybe_unused]] static const auto& LOUPE_ANONYMOUS_VARIABLE(LOUPE_DUMMY_) =                                                                                    \
 loupe::detail::get_tasks().emplace_back(loupe::get_type_name<type_name>(), [](loupe::reflection_blob& blob, loupe::type& type, loupe::detail::task_stage stage) \
 {                                                                                                                                                               \
-	using reflected_type = type_name;                                                                                                                           \
+	using reflected_type = std::remove_cv_t<type_name>;                                                                                                         \
 	switch (stage)                                                                                                                                              \
 	{                                                                                                                                                           \
 	case loupe::detail::task_stage::type_adapters:                                                                                                              \
