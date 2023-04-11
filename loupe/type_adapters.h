@@ -12,7 +12,7 @@ namespace loupe
 {
 	/// Arrays ///
 	template<typename Type>
-	struct array_adapter : public std::false_type { static array_type make_data(loupe::reflection_blob&) { return {}; } };
+	struct array_adapter : public std::false_type { static array make_data(loupe::reflection_blob&) { return {}; } };
 
 	template<typename Type, std::size_t ElementCount>
 	struct array_adapter<Type[ElementCount]> : public std::true_type
@@ -20,7 +20,7 @@ namespace loupe
 		using ArrayType = Type[ElementCount];
 		using ElementType = Type;
 
-		[[nodiscard]] static array_type make_data(loupe::reflection_blob& blob)
+		[[nodiscard]] static array make_data(loupe::reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
 			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
@@ -64,7 +64,7 @@ namespace loupe
 		using ArrayType = std::vector<ElementType>;
 		static_assert(!std::is_same_v<ElementType, bool>, "Loupe doesn't support reflecting \"std::vector<bool>\".");
 
-		[[nodiscard]] static array_type make_data(const reflection_blob& blob)
+		[[nodiscard]] static array make_data(const reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
 			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
@@ -121,7 +121,7 @@ namespace loupe
 	{
 		using ArrayType = std::array<ElementType, ElementCount>;
 
-		[[nodiscard]] static array_type make_data(const reflection_blob& blob)
+		[[nodiscard]] static array make_data(const reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
 			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
@@ -158,7 +158,7 @@ namespace loupe
 	{
 		using ArrayType = std::list<ElementType>;
 
-		[[nodiscard]] static array_type make_data(const reflection_blob& blob)
+		[[nodiscard]] static array make_data(const reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
 			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
@@ -212,7 +212,7 @@ namespace loupe
 		using ArrayType = std::string;
 		using ElementType = char;
 
-		[[nodiscard]] static array_type make_data(const reflection_blob& blob)
+		[[nodiscard]] static array make_data(const reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
 			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
@@ -261,7 +261,7 @@ namespace loupe
 		using ArrayType = std::string_view;
 		using ElementType = char;
 
-		[[nodiscard]] static array_type make_data(const reflection_blob& blob)
+		[[nodiscard]] static array make_data(const reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
 			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
@@ -299,14 +299,14 @@ namespace loupe
 	namespace detail
 	{
 		template<bool IsEnum, typename Type>
-		struct enum_adapter_impl : public std::false_type { static enum_type make_data(loupe::reflection_blob&) { return {}; } };
+		struct enum_adapter_impl : public std::false_type { static enumeration make_data(loupe::reflection_blob&) { return {}; } };
 
 		template<typename EnumType>
 		struct enum_adapter_impl<true, EnumType> : public std::true_type
 		{
 			using UnderlyingType = std::underlying_type_t<EnumType>;
 
-			static enum_type make_data(const reflection_blob& blob)
+			static enumeration make_data(const reflection_blob& blob)
 			{
 				const loupe::type* underlying_type = blob.find<UnderlyingType>();
 				LOUPE_ASSERT(underlying_type, "The enum's underlying type was not registered. It must be reflected separately.");

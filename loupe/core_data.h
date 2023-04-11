@@ -26,7 +26,7 @@ namespace loupe
 	};
 
 	//
-	struct variable : public metadata_container
+	struct member : public metadata_container
 	{
 		std::string_view name;
 		std::size_t offset;
@@ -35,7 +35,7 @@ namespace loupe
 	};
 
 	//
-	struct static_variable : public metadata_container
+	struct static_member : public metadata_container
 	{
 		std::string_view name;
 		void* address = nullptr;
@@ -44,39 +44,40 @@ namespace loupe
 	};
 
 	//
-	struct class_type
+	struct structure
 	{
-		std::vector<variable> variables;
-		std::vector<static_variable> static_variables;
+		std::vector<member> members;
+		std::vector<static_member> static_members;
 		std::vector<const type*> bases;
 
 		[[nodiscard]] bool is_derived_from(const type&) const;
 
-		[[nodiscard]] const variable* find_variable(std::string_view var_name) const;
-		[[nodiscard]] const variable* find_variable(std::size_t offset) const;
+		[[nodiscard]] const member* find_member(std::string_view var_name) const;
+		[[nodiscard]] const member* find_member(std::size_t offset) const;
 	};
 
 	//
-	struct enum_type
+	struct enumeration
 	{
 		const type* underlying_type = nullptr;
 		std::vector<enum_entry> entries;
 
-		[[nodiscard]] const std::size_t*      find_enum_value(std::string_view value_name) const;
-		[[nodiscard]] const std::string_view* find_enum_name(std::size_t value) const;
+		[[nodiscard]] const std::size_t*      find_value(std::string_view value_name) const;
+		[[nodiscard]] const std::string_view* find_name(std::size_t value) const;
 	};
 
 	//
-	struct pointer_type
+	struct pointer
 	{
 		const type* target_type = nullptr;
-		bool is_target_const = false;
 
-		void* (*dereference)(void* pointer) = nullptr;
+		void* (*get_target_address)(void* pointer) = nullptr;
+		std::shared_ptr<void> (*get_shared)(void* pointer) = nullptr;
+		void (*reset)(void* pointer, void* new_target) = nullptr;
 	};
 
 	//
-	struct array_type
+	struct array
 	{
 		const type* element_type = nullptr;
 		bool dynamic = false;
@@ -90,7 +91,7 @@ namespace loupe
 	};
 
 	//
-	struct map_type
+	struct map
 	{
 		const type* key_type = nullptr;
 		const type* value_type = nullptr;
@@ -102,7 +103,7 @@ namespace loupe
 	};
 
 	//
-	struct variant_type
+	struct variant
 	{
 		std::vector<const type*> alternatives;
 
@@ -112,7 +113,7 @@ namespace loupe
 	};
 
 	//
-	struct fundamental_type {};
+	struct fundamental {};
 
 	//
 	struct type
@@ -121,7 +122,7 @@ namespace loupe
 		std::size_t size;
 		std::size_t alignment;
 
-		std::variant<class_type, enum_type, pointer_type, array_type, map_type, variant_type, fundamental_type> data;
+		std::variant<structure, enumeration, pointer, array, map, variant, fundamental> data;
 
 		[[nodiscard]] bool is_a(const type&) const;
 

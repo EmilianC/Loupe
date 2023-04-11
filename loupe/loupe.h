@@ -77,7 +77,7 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<type_name>(), [](lo
 	case loupe::detail::task_stage::type_adapters:                                                                                                              \
 		if constexpr (std::is_void_v<reflected_type>)                                                                                                           \
 		{                                                                                                                                                       \
-			type.data = loupe::fundamental_type{};                                                                                                              \
+			type.data = loupe::fundamental{};                                                                                                                   \
 			type.size = 0;                                                                                                                                      \
 			type.alignment = 1;                                                                                                                                 \
 		}                                                                                                                                                       \
@@ -98,25 +98,25 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<type_name>(), [](lo
 			else if constexpr (loupe::enum_adapter<reflected_type>::value)                                                                                      \
 				type.data = loupe::enum_adapter<reflected_type>::make_data(blob);                                                                               \
 			else if constexpr (std::is_class_v<reflected_type>)                                                                                                 \
-				type.data = loupe::class_type{};                                                                                                                \
+				type.data = loupe::structure{};                                                                                                                 \
 			else if constexpr (std::is_fundamental_v<reflected_type>)                                                                                           \
-				type.data = loupe::fundamental_type{};                                                                                                          \
+				type.data = loupe::fundamental{};                                                                                                               \
 			else LOUPE_ASSERT(false, "Unrecognized type category.");                                                                                            \
 		}                                                                                                                                                       \
 		break;                                                                                                                                                  \
 	case loupe::detail::task_stage::enums_bases_members:
 
-#define ENUM_VALUES           ; std::get<loupe::enum_type>(type.data).entries =
+#define ENUM_VALUES           ; std::get<loupe::enumeration>(type.data).entries =
 #define REF_VALUE(value, ...) loupe::detail::register_enum_entry<__VA_ARGS__>(blob, #value, static_cast<std::size_t>(reflected_type::value))
 
-#define BASES               ; std::get<loupe::class_type>(type.data).bases =
+#define BASES               ; std::get<loupe::structure>(type.data).bases =
 #define REF_BASE(base_type) loupe::detail::register_base<base_type>(blob),
 
-#define MEMBERS                 ; std::get<loupe::class_type>(type.data).variables =
-#define REF_MEMBER(member, ...) loupe::detail::register_variable<decltype(reflected_type::member), __VA_ARGS__>(blob, #member, offsetof(reflected_type, member))
+#define MEMBERS                 ; std::get<loupe::structure>(type.data).members =
+#define REF_MEMBER(member, ...) loupe::detail::register_member<decltype(reflected_type::member), __VA_ARGS__>(blob, #member, offsetof(reflected_type, member))
 
-#define STATIC_MEMBERS                 ; std::get<loupe::class_type>(type.data).static_variables =
-#define REF_STATIC_MEMBER(member, ...) loupe::detail::register_static_variable<decltype(reflected_type::member), __VA_ARGS__>(blob, #member, &reflected_type::member)
+#define STATIC_MEMBERS                 ; std::get<loupe::structure>(type.data).static_members =
+#define REF_STATIC_MEMBER(member, ...) loupe::detail::register_static_member<decltype(reflected_type::member), __VA_ARGS__>(blob, #member, &reflected_type::member)
 
 #define REF_END ;}});
 

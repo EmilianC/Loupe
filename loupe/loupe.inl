@@ -43,9 +43,9 @@ namespace loupe
 		}
 
 		template<typename Type, typename... Tags>
-		variable register_variable(reflection_blob& blob, std::string_view name, std::size_t offset)
+		member register_member(reflection_blob& blob, std::string_view name, std::size_t offset)
 		{
-			variable variable {
+			member member {
 				.name = name,
 				.offset = offset,
 				.type = blob.find<Type>(),
@@ -54,23 +54,23 @@ namespace loupe
 
 			if constexpr (sizeof...(Tags) > 0)
 			{
-				variable.metadata.reserve(sizeof...(Tags));
+				member.metadata.reserve(sizeof...(Tags));
 
 				([&] {
 					const type* tag_type = blob.find<Tags>();
 					LOUPE_ASSERT(tag_type, "Metadata tag was not registered. Metadata tags must also be reflected separately.");
 
-					variable.metadata.push_back(tag_type);
+					member.metadata.push_back(tag_type);
 				} (), ...);
 			}
 
-			return variable;
+			return member;
 		}
 
 		template<typename Type, typename... Tags>
-		static_variable register_static_variable(reflection_blob& blob, std::string_view name, void* ptr)
+		static_member register_static_member(reflection_blob& blob, std::string_view name, void* ptr)
 		{
-			static_variable variable{
+			static_member member {
 				.name = name,
 				.address = ptr,
 				.type = blob.find<Type>(),
@@ -79,17 +79,17 @@ namespace loupe
 
 			if constexpr (sizeof...(Tags) > 0)
 			{
-				variable.metadata.reserve(sizeof...(Tags));
+				member.metadata.reserve(sizeof...(Tags));
 
 				([&] {
 					const type* tag_type = blob.find<Tags>();
 					LOUPE_ASSERT(tag_type, "Metadata tag was not registered. Metadata tags must also be reflected separately.");
 
-					variable.metadata.push_back(tag_type);
+					member.metadata.push_back(tag_type);
 				} (), ...);
 			}
 
-			return variable;
+			return member;
 		}
 
 		template<typename Base>

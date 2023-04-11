@@ -75,7 +75,7 @@ int main()
 
 	const loupe::type* descriptor = blob.find("small_enum");
 	// Direct type category access.
-	const loupe::enum_type& data = std::get<loupe::enum_type>(descriptor->data);
+	const loupe::enumeration& data = std::get<loupe::enumeration>(descriptor->data);
 	for (const loupe::enum_entry& entry : data.entires)
 	{
 		print(entry.name);                   // "value0", "value1", "COUNT"
@@ -84,24 +84,24 @@ int main()
 	}
 
 	// Type lookup can also be done directly with known types.
-	const loupe::type* float_descriptor  = blob.find<float>();
-	const loupe::type* vector_descriptor = blob.find<vec3>();
+	const loupe::type* float_type = blob.find<float>();
+	const loupe::type* vec3_type  = blob.find<vec3>();
 	// Visitation can respond to any of the type categories.
-	vector_descriptor->visit(
-		[&](const loupe::class_type& data) {
-			for (const loupe::variable& variable : data.variables)
+	vec3_type->visit(
+		[&](const loupe::structure& data) {
+			for (const loupe::member& member : data.members)
 			{
-				print(variable.name);                     // "x",    "y",    "z"
-				print(variable.offset);                   //  0,      4,      8
-				print(variable.type == float_descriptor); // "true", "true", "true"
+				print(member.name);               // "x",    "y",    "z"
+				print(member.offset);             //  0,      4,      8
+				print(member.type == float_type); // "true", "true", "true"
 			}
 		},
-		[&](const loupe::enum_type& data) { /*...*/ },
-		[&](const loupe::pointer_type& data) { /*...*/ },
-		[&](const loupe::array_type& data) { /*...*/ },
-		[&](const loupe::map_type& data) { /*...*/ },
-		[&](const loupe::variant_type& data) { /*...*/ },
-		[&](const loupe::fundamental_type& data) { /*...*/ }
+		[&](const loupe::enumeration& data) { /*...*/ },
+		[&](const loupe::pointer& data)     { /*...*/ },
+		[&](const loupe::array& data)       { /*...*/ },
+		[&](const loupe::map& data)         { /*...*/ },
+		[&](const loupe::variant& data)     { /*...*/ },
+		[&](const loupe::fundamental& data) { /*...*/ }
 	);
 }
 ```
