@@ -311,7 +311,10 @@ namespace loupe
 				const loupe::type* underlying_type = blob.find<UnderlyingType>();
 				LOUPE_ASSERT(underlying_type, "The enum's underlying type was not registered. It must be reflected separately.");
 
-				return { .underlying_type = underlying_type };
+				return {
+					.underlying_type = underlying_type,
+					.strongly_typed = std::is_scoped_enum_v<EnumType>
+				};
 			}
 		};
 	}
