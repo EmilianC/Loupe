@@ -44,6 +44,19 @@ namespace loupe
 		return nullptr;
 	}
 
+	const static_member* structure::find_static_member(std::string_view var_name) const
+	{
+		for (const static_member& static_member : static_members)
+		{
+			if (static_member.name == var_name)
+			{
+				return &static_member;
+			}
+		}
+
+		return nullptr;
+	}
+
 	bool type::is_a(const type& type) const
 	{
 		if (&type == this)

@@ -54,6 +54,7 @@ namespace loupe
 
 		[[nodiscard]] const member* find_member(std::string_view var_name) const;
 		[[nodiscard]] const member* find_member(std::size_t offset) const;
+		[[nodiscard]] const static_member* find_static_member(std::string_view var_name) const;
 	};
 
 	//
