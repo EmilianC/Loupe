@@ -11,7 +11,7 @@ namespace loupe
 		{
 			static std::vector<task> tasks = []() {
 				std::vector<task> storage;
-				storage.reserve(128);
+				storage.reserve(256);
 				return storage;
 			}();
 
@@ -24,7 +24,8 @@ namespace loupe
 		reflection_blob blob;
 
 		auto& tasks = detail::get_tasks();
-		// Sorting by name allows for faster searching.
+		// The final array of types needs to be sorted to allow for faster lookups.
+		// It is easier to just sort the tasks by name from the start.
 		std::sort(tasks.begin(), tasks.end(), [](const detail::task& left, const detail::task& right) {
 			return left.name < right.name;
 		});
@@ -38,16 +39,13 @@ namespace loupe
 #endif
 
 		blob.types.resize(tasks.size());
-		unsigned j = 0;
-		for (const detail::task& task : tasks)
+		for (unsigned i = 0; const detail::task& task : tasks)
 		{
-			blob.types[j].name = task.name;
-			++j;
+			blob.types[i++].name = task.name;
 		}
 
 		auto process_stage = [&](detail::task_stage stage) {
-			unsigned i = 0;
-			for (const detail::task& task : tasks)
+			for (unsigned i = 0; const detail::task& task : tasks)
 			{
 				task.func(blob, blob.types[i++], stage);
 			}

@@ -62,9 +62,9 @@ namespace loupe
 		if (&type == this)
 			return true;
 
-		if (const structure* class_data = std::get_if<structure>(&data))
+		if (const structure* struct_data = std::get_if<structure>(&data))
 		{
-			return class_data->is_derived_from(type);
+			return struct_data->is_derived_from(type);
 		}
 
 		return false;
@@ -252,4 +252,4 @@ REFLECT(std::vector<loupe::enum_entry>)      REF_END;
 REFLECT(std::vector<loupe::member>)          REF_END;
 REFLECT(std::vector<loupe::static_member>)   REF_END;
 REFLECT(std::vector<loupe::type>)            REF_END;
-REFLECT(std::vector<const loupe::type*>)     REF_END;
+REFLECT(std::vector<loupe::type*>)           REF_END;

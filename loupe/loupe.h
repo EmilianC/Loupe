@@ -103,7 +103,7 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<type_name>(), [](lo
 				type.data = loupe::structure{};                                                                                                                 \
 			else if constexpr (std::is_fundamental_v<reflected_type>)                                                                                           \
 				type.data = loupe::fundamental{};                                                                                                               \
-			else LOUPE_ASSERT(false, "Unrecognized type category.");                                                                                            \
+			else LOUPE_ASSERT(false, "Unsupported type category.");                                                                                            \
 		}                                                                                                                                                       \
 		break;                                                                                                                                                  \
 	case loupe::detail::task_stage::enums_bases_members:
