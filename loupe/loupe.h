@@ -93,7 +93,9 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<type_name>(), [](lo
 					new (location) reflected_type;                                                                                                              \
 				};                                                                                                                                              \
 			}                                                                                                                                                   \
-			if constexpr (loupe::array_adapter<reflected_type>::value)                                                                                          \
+			if constexpr (loupe::pointer_adapter<reflected_type>::value)                                                                                        \
+				type.data = loupe::pointer_adapter<reflected_type>::make_data(blob);                                                                            \
+			else if constexpr (loupe::array_adapter<reflected_type>::value)                                                                                     \
 				type.data = loupe::array_adapter<reflected_type>::make_data(blob);                                                                              \
 			else if constexpr (loupe::enum_adapter<reflected_type>::value)                                                                                      \
 				type.data = loupe::enum_adapter<reflected_type>::make_data(blob);                                                                               \

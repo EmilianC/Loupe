@@ -10,9 +10,95 @@
 
 namespace loupe
 {
+	/// Pointers ///
+	template<typename TargetType>
+	struct pointer_adapter : public std::false_type { static pointer make_data(const reflection_blob&) { return {}; } };
+
+	template<typename TargetType>
+	struct pointer_adapter<TargetType*> : public std::true_type
+	{
+		using PointerType = TargetType*;
+
+		[[nodiscard]] static pointer make_data(const reflection_blob& blob)
+		{
+			const loupe::type* target_type = blob.find<TargetType>();
+			LOUPE_ASSERT(target_type, "The pointer's target type was not registered. It must be reflected separately.");
+
+			return {
+				.target_type = target_type,
+				.get_target_address	= [](void* pointer) { return pointer; }
+			};
+		}
+	};
+
+	template<typename TargetType>
+	struct pointer_adapter<std::shared_ptr<TargetType>> : public std::true_type
+	{
+		using PointerType = std::shared_ptr<TargetType>;
+
+		[[nodiscard]] static pointer make_data(const reflection_blob& blob)
+		{
+			const loupe::type* target_type = blob.find<TargetType>();
+			LOUPE_ASSERT(target_type, "The pointer's target type was not registered. It must be reflected separately.");
+
+			return {
+				.target_type = target_type,
+				.get_target_address = [](void* pointer) -> void* {
+					return static_cast<std::shared_ptr<void>*>(pointer)->get();
+				},
+				.get_shared = [](void* pointer) -> std::shared_ptr<void> {
+					return *static_cast<std::shared_ptr<void>*>(pointer);
+				}
+			};
+		}
+	};
+
+	template<typename TargetType>
+	struct pointer_adapter<std::weak_ptr<TargetType>> : public std::true_type
+	{
+		using PointerType = std::weak_ptr<TargetType>;
+
+		[[nodiscard]] static pointer make_data(const reflection_blob& blob)
+		{
+			const loupe::type* target_type = blob.find<TargetType>();
+			LOUPE_ASSERT(target_type, "The pointer's target type was not registered. It must be reflected separately.");
+
+			return {
+				.target_type = target_type,
+				.get_target_address = [](void* pointer) -> void* {
+					return static_cast<std::weak_ptr<void>*>(pointer)->lock().get();
+				},
+				.get_shared = [](void* pointer) -> std::shared_ptr<void> {
+					return static_cast<std::weak_ptr<void>*>(pointer)->lock();
+				}
+			};
+		}
+	};
+
+	template<typename TargetType>
+	struct pointer_adapter<std::unique_ptr<TargetType>> : public std::true_type
+	{
+		using PointerType = std::unique_ptr<TargetType>;
+
+		[[nodiscard]] static pointer make_data(const reflection_blob& blob)
+		{
+			const loupe::type* target_type = blob.find<TargetType>();
+			LOUPE_ASSERT(target_type, "The pointer's target type was not registered. It must be reflected separately.");
+
+			return {
+				.target_type = target_type,
+				.get_target_address = [](void* pointer) -> void* {
+					return static_cast<std::unique_ptr<void>*>(pointer)->get();
+				}
+			};
+		}
+	};
+	/// End Pointers ///
+
+
 	/// Arrays ///
 	template<typename Type>
-	struct array_adapter : public std::false_type { static array make_data(loupe::reflection_blob&) { return {}; } };
+	struct array_adapter : public std::false_type { static array make_data(const reflection_blob&) { return {}; } };
 
 	template<typename Type, std::size_t ElementCount>
 	struct array_adapter<Type[ElementCount]> : public std::true_type
@@ -20,7 +106,7 @@ namespace loupe
 		using ArrayType = Type[ElementCount];
 		using ElementType = Type;
 
-		[[nodiscard]] static array make_data(loupe::reflection_blob& blob)
+		[[nodiscard]] static array make_data(const reflection_blob& blob)
 		{
 			const loupe::type* element_type = blob.find<ElementType>();
 			LOUPE_ASSERT(element_type, "The array's element type was not registered. It must be reflected separately.");
@@ -299,7 +385,7 @@ namespace loupe
 	namespace detail
 	{
 		template<bool IsEnum, typename Type>
-		struct enum_adapter_impl : public std::false_type { static enumeration make_data(loupe::reflection_blob&) { return {}; } };
+		struct enum_adapter_impl : public std::false_type { static enumeration make_data(const reflection_blob&) { return {}; } };
 
 		template<typename EnumType>
 		struct enum_adapter_impl<true, EnumType> : public std::true_type
