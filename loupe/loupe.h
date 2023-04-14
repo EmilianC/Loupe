@@ -87,11 +87,14 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<type_name>(), [](lo
 			type.alignment = alignof(reflected_type);                                                                                                           \
 			if constexpr (std::is_default_constructible_v<reflected_type>)                                                                                      \
 			{                                                                                                                                                   \
-				type.construct = []() { return std::make_any<reflected_type>(); };                                                                              \
 				type.construct_at = [](void* location) {                                                                                                        \
 					LOUPE_ASSERT(reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) != 0, "Construction location for type is misaligned.");   \
 					new (location) reflected_type;                                                                                                              \
 				};                                                                                                                                              \
+				if constexpr (std::is_trivially_copyable_v<reflected_type>)                                                                                     \
+				{                                                                                                                                               \
+					type.construct = []() { return std::make_any<reflected_type>(); };                                                                          \
+				}                                                                                                                                               \
 			}                                                                                                                                                   \
 			if constexpr (loupe::pointer_adapter<reflected_type>::value)                                                                                        \
 				type.data = loupe::pointer_adapter<reflected_type>::make_data(blob);                                                                            \
@@ -103,7 +106,7 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<type_name>(), [](lo
 				type.data = loupe::structure{};                                                                                                                 \
 			else if constexpr (std::is_fundamental_v<reflected_type>)                                                                                           \
 				type.data = loupe::fundamental{};                                                                                                               \
-			else LOUPE_ASSERT(false, "Unsupported type category.");                                                                                            \
+			else LOUPE_ASSERT(false, "Unsupported type category.");                                                                                             \
 		}                                                                                                                                                       \
 		break;                                                                                                                                                  \
 	case loupe::detail::task_stage::enums_bases_members:
