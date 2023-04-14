@@ -138,6 +138,12 @@ namespace loupe
 	//
 	struct reflection_blob
 	{
+		reflection_blob() = default;
+		reflection_blob(reflection_blob&) = delete;
+		reflection_blob(reflection_blob&&) = default;
+		reflection_blob& operator=(reflection_blob&) = delete;
+		reflection_blob& operator=(reflection_blob&&) = default;
+
 		template<typename Type>
 		[[nodiscard]] const type* find() const;
 		[[nodiscard]] const type* find(std::string_view name) const;
