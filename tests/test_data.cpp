@@ -17,7 +17,7 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<quaternion>(), [](l
 	case loupe::detail::task_stage::type_adapters:
 		if constexpr (std::is_void_v<reflected_type>)
 		{
-			type.data = loupe::fundamental_type{};
+			type.data = loupe::fundamental{};
 			type.size = 0;
 			type.alignment = 1;
 		}
@@ -27,30 +27,35 @@ loupe::detail::get_tasks().emplace_back(loupe::get_type_name<quaternion>(), [](l
 			type.alignment = alignof(reflected_type);
 			if constexpr (std::is_default_constructible_v<reflected_type>)
 			{
-				type.construct = []() { return std::make_any<reflected_type>(); };
 				type.construct_at = [](void* location) {
 					LOUPE_ASSERT(reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) != 0, "Construction location for type is misaligned.");
 					new (location) reflected_type;
 				};
+				if constexpr (std::is_trivially_copyable_v<reflected_type>)
+				{
+					type.construct = []() { return std::make_any<reflected_type>(); };
+				}
 			}
-			if constexpr (loupe::array_adapter<reflected_type>::value)
+			if constexpr (loupe::pointer_adapter<reflected_type>::value)
+				type.data = loupe::pointer_adapter<reflected_type>::make_data(blob);
+			else if constexpr (loupe::array_adapter<reflected_type>::value)
 				type.data = loupe::array_adapter<reflected_type>::make_data(blob);
 			else if constexpr (loupe::enum_adapter<reflected_type>::value)
 				type.data = loupe::enum_adapter<reflected_type>::make_data(blob);
 			else if constexpr (std::is_class_v<reflected_type>)
-				type.data = loupe::class_type{};
+				type.data = loupe::structure{};
 			else if constexpr (std::is_fundamental_v<reflected_type>)
-				type.data = loupe::fundamental_type{};
-			else LOUPE_ASSERT(false, "Unrecognized type category.");
+				type.data = loupe::fundamental{};
+			else LOUPE_ASSERT(false, "Unsupported type category.");
 		}
 		break;
 	case loupe::detail::task_stage::enums_bases_members:
 		// Manual macro expansion again.
-		; std::get<loupe::class_type>(type.data).variables = {
-			loupe::detail::register_variable<decltype(reflected_type::x)>(blob, "x", offsetof(reflected_type, x)),
-			loupe::detail::register_variable<decltype(reflected_type::y)>(blob, "y", offsetof(reflected_type, y)),
-			loupe::detail::register_variable<decltype(reflected_type::z)>(blob, "z", offsetof(reflected_type, z)),
-			loupe::detail::register_variable<decltype(reflected_type::w)>(blob, "w", offsetof(reflected_type, w))
+		; std::get<loupe::structure>(type.data).members = {
+			loupe::detail::register_member<decltype(reflected_type::x)>(blob, "x", offsetof(reflected_type, x)),
+			loupe::detail::register_member<decltype(reflected_type::y)>(blob, "y", offsetof(reflected_type, y)),
+			loupe::detail::register_member<decltype(reflected_type::z)>(blob, "z", offsetof(reflected_type, z)),
+			loupe::detail::register_member<decltype(reflected_type::w)>(blob, "w", offsetof(reflected_type, w))
 		}
 		;
 	}

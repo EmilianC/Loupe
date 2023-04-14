@@ -1,8 +1,16 @@
 list(APPEND loupe_test_files
+	"arrays.cpp"
+	"blob.cpp"
+	"enums.cpp"
+	"fundamentals.cpp"
 	"main.cpp"
+	"maps.cpp"
+	"pointers.cpp"
+	"serialization.cpp"
+	"structures.cpp"
 	"test_data.cpp"
 	"test_data.h"
-	"tests.cpp"
+	"variants.cpp"
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${loupe_test_files})
@@ -12,7 +20,8 @@ target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unit_tests
 	PUBLIC
 		catch
-		cereal
+	PRIVATE
+		loupe
 )
 target_compile_definitions(unit_tests
 	PRIVATE
@@ -26,7 +35,3 @@ loupe_disable_exceptions(unit_tests OPTIONAL)
 
 # Disable warning: local variable is initialized but not referenced.
 target_compile_options(unit_tests PRIVATE /wd4189)
-target_link_libraries(unit_tests
-	PRIVATE
-		loupe
-)

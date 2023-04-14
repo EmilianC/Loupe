@@ -2,6 +2,8 @@
 #pragma once
 #include "loupe.h"
 
+#include <cereal/archives/json.hpp>
+
 namespace loupe
 {
 	struct serializable {};
@@ -12,50 +14,47 @@ namespace loupe
 		archiver(const reflection_blob& blob, Archive& archive)
 			: archive(&archive)
 		{
-			int_type = blob.find<int>();
-			float_type = blob.find<float>();
 		}
 
 		void serialize(void* data, const type* type)
 		{
-			//if (type->members.empty())
-			//{
-			//	if (type == int_type)
-			//	{
-			//		serialize(static_cast<int*>(data));
-			//	}
-			//	else if (type == float_type)
-			//	{
-			//		serialize(static_cast<int*>(data));
-			//	}
-			//}
-			//else
-			//{
-			//	for (const variable& member : type->members)
-			//	{
-			//		//if (!member.has_metadata<serializable>())
-			//		//	continue;
-			//	
-			//		serialize(static_cast<std::byte*>(data) + member.offset, member.type);
-			//	}
-			//}
+			type->visit(
+				[&](const structure& data) {
+					for (const member& member : data.members)
+					{
+
+					}
+				},
+				[&](const enumeration& data) { /*...*/ },
+				[&](const pointer& data) { /*...*/ },
+				[&](const array& data) { /*...*/ },
+				[&](const map& data) { /*...*/ },
+				[&](const variant& data) { /*...*/ },
+				[&](const fundamental& data) { /*...*/ }
+			);
 		}
 
-		void serialize(short int data)        { (*archive)(data); }
-		void serialize(int data)              { (*archive)(data); }
-		void serialize(unsigned int data)     { (*archive)(data); }
-		void serialize(long data)             { (*archive)(data); }
-		void serialize(char data)             { (*archive)(data); }
-		void serialize(unsigned char data)    { (*archive)(data); }
-		void serialize(bool data)             { (*archive)(data); }
-		void serialize(float data)            { (*archive)(data); }
-		void serialize(double data)           { (*archive)(data); }
-		void serialize(std::byte data)        { (*archive)(data); }
-		void serialize(std::string data)      { (*archive)(data); }
-		void serialize(std::string_view data) { (*archive)(data); }
-
-		const type* int_type;
-		const type* float_type;
+		void serialize(short int data)               { (*archive)(data); }
+		void serialize(int data)                     { (*archive)(data); }
+		void serialize(long int data)                { (*archive)(data); }
+		void serialize(long long int data)           { (*archive)(data); }
+		void serialize(unsigned short int data)      { (*archive)(data); }
+		void serialize(unsigned int data)            { (*archive)(data); }
+		void serialize(unsigned long int data)       { (*archive)(data); }
+		void serialize(unsigned long long int data)  { (*archive)(data); }
+		void serialize(char data)                    { (*archive)(data); }
+		void serialize(unsigned char data)           { (*archive)(data); }
+		void serialize(char8_t data)                 { (*archive)(data); }
+		void serialize(char16_t data)                { (*archive)(data); }
+		void serialize(char32_t data)                { (*archive)(data); }
+		void serialize(wchar_t data)                 { (*archive)(data); }
+		void serialize(bool data)                    { (*archive)(data); }
+		void serialize(float data)                   { (*archive)(data); }
+		void serialize(double data)                  { (*archive)(data); }
+		void serialize(long double data)             { (*archive)(data); }
+		void serialize(std::byte data)               { (*archive)(data); }
+		void serialize(std::string data)             { (*archive)(data); }
+		void serialize(std::string_view data)        { (*archive)(data); }
 
 		Archive* archive;
 	};
