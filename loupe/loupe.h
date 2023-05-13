@@ -16,46 +16,6 @@ namespace loupe
 	void clear_reflect_tasks();
 }
 
-
-/* Reflect private variable example
-*
-#include <array>
-#include <string_view>
-#include <type_traits>
-#include <cstddef>
-
-struct test
-{
-	template<typename T, unsigned> friend struct offset_collector; // this needs to be a macro
-private:
-	int buffer[100];
-	int temp;
-};
-
-// this needs to be a macro as well, REFLECT_PRIVATE() it'll need to be outside the usual reflection block.
-template<typename T, unsigned size>
-struct offset_collector2
-{
-	using type = T;
-	static constexpr unsigned offset = size;
-};
-
-template<typename T, unsigned>
-struct offset_collector : public offset_collector2<decltype(test::temp), offsetof(test, temp)>
-{
-	using type2 = offset_collector2::type;
-	static constexpr unsigned offset2 = offset_collector2::offset;
-};
-
-int main()
-{
-	return offset_collector<int, 0>::offset2;
-}
-
-//lastly, we'll need a PRIVATE_MEMBER() macro in the main block which knows to look for the temp collector types instead of calling offsetof()
-*/
-
-
 #define LOUPE_CONCATENATE(s1, s2) s1##s2
 #define LOUPE_CONCATENATE_INDIRECT(s1, s2) LOUPE_CONCATENATE(s1, s2)
 #define LOUPE_ANONYMOUS_VARIABLE(str) LOUPE_CONCATENATE_INDIRECT(str, __COUNTER__)
