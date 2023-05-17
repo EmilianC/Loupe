@@ -24,7 +24,6 @@ namespace loupe
 // Normally the ','s in a template parameter list would interfere with the macro expansion.
 #define LOUPE_TEMPLATE(...) decltype(__VA_ARGS__())
 
-#define LOUPE_FRIEND template<typename T, unsigned> friend struct offset_collector;
 
 #define REFLECT(type_name)                                                                                                                                      \
 static_assert(!std::is_reference_v<type_name>, "References cannot be reflected.");                                                                              \
