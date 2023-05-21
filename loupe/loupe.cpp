@@ -17,11 +17,32 @@ namespace loupe
 
 			return tasks;
 		}
+
+		property* find_or_add_property(std::vector<property>& properties, std::string_view signature)
+		{
+			auto itr = std::lower_bound(properties.begin(), properties.end(), signature, [](const property& prop, std::string_view signature) {
+				return prop.signature < signature;
+			});
+
+			if (itr == properties.end())
+			{
+				properties.push_back({ signature });
+				return &properties.back();
+			}
+
+			if (itr->signature != signature)
+			{
+				itr = properties.insert(itr, { signature });
+			}
+
+			return &(*itr);
+		}
 	}
 
-	reflection_blob reflect()
+	reflection_blob reflect(unsigned int current_version)
 	{
 		reflection_blob blob;
+		blob.version = current_version;
 
 		auto& tasks = detail::get_tasks();
 		// The final array of types needs to be sorted to allow for faster lookups.
@@ -44,15 +65,26 @@ namespace loupe
 			blob.types[i++].name = task.name;
 		}
 
-		auto process_stage = [&](detail::task_stage stage) {
+		for (unsigned i = 0; const detail::task& task : tasks)
+		{
+			task.initialize_type(blob, blob.types[i++]);
+		}
+
+		auto process_data_stage = [&](detail::task_data_stage stage) {
 			for (unsigned i = 0; const detail::task& task : tasks)
 			{
-				task.func(blob, blob.types[i++], stage);
+				if (task.initialize_data)
+				{
+					task.initialize_data(blob, blob.properties, blob.types[i], stage);
+				}
+				++i;
 			}
 		};
 
-		process_stage(detail::task_stage::type_adapters);
-		process_stage(detail::task_stage::enums_bases_members);
+		process_data_stage(detail::task_data_stage::scan_properties);
+		process_data_stage(detail::task_data_stage::enums);
+		process_data_stage(detail::task_data_stage::bases);
+		process_data_stage(detail::task_data_stage::members);
 
 		return blob;
 	}

@@ -1,125 +1,125 @@
 #include "test_data.h"
 #include "loupe/loupe.h"
+#include "loupe/property_adapters.h"
+#include <array>
 
-namespace nested
+namespace loupe::adapters
 {
-	unsigned base_object::num_objects = 0;
+	// Custom array adapter for game_object_groups.
+	template<>
+	struct array_adapter<game_object_group> : public std::true_type
+	{
+		using ArrayType = game_object_group;
+		using ElementType = game_object;
+		static constexpr std::size_t ArraySize = sizeof(game_object_group::objects) / sizeof(game_object);
+
+		[[nodiscard]] static array make_data(const reflection_blob& blob)
+		{
+			const property* element_property = blob.find_property<ElementType>();
+			LOUPE_ASSERT(element_property, "The array's element type was not registered. It must be reflected separately.");
+
+			return {
+				.element_property = element_property,
+				.dynamic = false,
+				.unique_set = false,
+				.get_count = [](const void*) -> std::size_t { return ArraySize; },
+
+				.contains = [](const void* array, const void* data) -> bool {
+					auto* container = static_cast<const ArrayType*>(array);
+					auto* element = static_cast<const ElementType*>(data);
+					return std::find(std::begin(container->objects), std::end(container->objects), *element) != std::end(container->objects);
+				},
+
+				.get_at = [](const void* array, std::size_t index) -> const void* {
+					LOUPE_ASSERT(index < ArraySize, "Index out of bounds.");
+					auto* container = static_cast<const ArrayType*>(array);
+					return &container->objects[index];
+				},
+
+				.set_at = [](void* array, std::size_t index, const void* data) {
+					LOUPE_ASSERT(index < ArraySize, "Index out of bounds.");
+					auto* container = static_cast<ArrayType*>(array);
+					auto* element = static_cast<const ElementType*>(data);
+
+					container->objects[index] = *element;
+				}
+			};
+		}
+	};
 }
 
-// This is reflected without macros just to make it easier to iterate in development.
-static_assert(!std::is_reference_v<quaternion>, "References cannot be reflected.");
-[[maybe_unused]] static const auto& manually_expanded =
-loupe::detail::get_tasks().emplace_back(loupe::get_type_name<quaternion>(), [](loupe::reflection_blob& blob, loupe::type& type, loupe::detail::task_stage stage)
-{
-	using reflected_type = std::remove_cv_t<quaternion>;
-	switch (stage)
-	{
-	case loupe::detail::task_stage::type_adapters:
-		if constexpr (std::is_void_v<reflected_type>)
-		{
-			type.data = loupe::fundamental{};
-			type.size = 0;
-			type.alignment = 1;
-		}
-		else
-		{
-			type.size = sizeof(reflected_type);
-			type.alignment = alignof(reflected_type);
-			if constexpr (std::is_default_constructible_v<reflected_type>)
-			{
-				type.construct_at = [](void* location) {
-					LOUPE_ASSERT(reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) != 0, "Construction location for type is misaligned.");
-					new (location) reflected_type;
-				};
-				if constexpr (std::is_trivially_copyable_v<reflected_type>)
-				{
-					type.construct = []() { return std::make_any<reflected_type>(); };
-				}
-			}
-			if constexpr (loupe::pointer_adapter<reflected_type>::value)
-				type.data = loupe::pointer_adapter<reflected_type>::make_data(blob);
-			else if constexpr (loupe::array_adapter<reflected_type>::value)
-				type.data = loupe::array_adapter<reflected_type>::make_data(blob);
-			else if constexpr (loupe::enum_adapter<reflected_type>::value)
-				type.data = loupe::enum_adapter<reflected_type>::make_data(blob);
-			else if constexpr (std::is_class_v<reflected_type>)
-				type.data = loupe::structure{};
-			else if constexpr (std::is_fundamental_v<reflected_type>)
-				type.data = loupe::fundamental{};
-			else LOUPE_ASSERT(false, "Unsupported type category.");
-		}
-		break;
-	case loupe::detail::task_stage::enums_bases_members:
-		// Manual macro expansion again.
-		; std::get<loupe::structure>(type.data).members = {
-			loupe::detail::register_member<decltype(reflected_type::x)>(blob, "x", offsetof(reflected_type, x)),
-			loupe::detail::register_member<decltype(reflected_type::y)>(blob, "y", offsetof(reflected_type, y)),
-			loupe::detail::register_member<decltype(reflected_type::z)>(blob, "z", offsetof(reflected_type, z)),
-			loupe::detail::register_member<decltype(reflected_type::w)>(blob, "w", offsetof(reflected_type, w))
-		}
-		;
-	}
-});
-
-REFLECT(hidden) REF_END;
-REFLECT(editor_only) REF_END;
+REFLECT_SIMPLE(hidden);
+REFLECT_SIMPLE(editor_only);
 
 REFLECT(small_enum) ENUM_VALUES {
-	REF_VALUE(local_space),
-	REF_VALUE(world_space),
+	REF_VALUE(local_space)
+	REF_VALUE(world_space)
 	REF_VALUE(COUNT, hidden)
 } REF_END;
 
 REFLECT(nested::small_enum) ENUM_VALUES {
-	REF_VALUE(local_space),
-	REF_VALUE(world_space),
+	REF_VALUE(local_space)
+	REF_VALUE(world_space)
 	REF_VALUE(COUNT, hidden)
 } REF_END;
 
 REFLECT(large_enum) ENUM_VALUES {
-	REF_VALUE(value0),
-	REF_VALUE(value1),
-	REF_VALUE(value2),
-	REF_VALUE(value3),
-	REF_VALUE(value4),
-	REF_VALUE(value5),
-	REF_VALUE(value6),
-	REF_VALUE(value7),
-	REF_VALUE(value8),
-	REF_VALUE(value9),
+	REF_VALUE(value0)
+	REF_VALUE(value1)
+	REF_VALUE(value2)
+	REF_VALUE(value3)
+	REF_VALUE(value4)
+	REF_VALUE(value5)
+	REF_VALUE(value6)
+	REF_VALUE(value7)
+	REF_VALUE(value8)
+	REF_VALUE(value9)
 	REF_VALUE(COUNT, hidden)
 } REF_END;
 
 REFLECT(nested::large_enum) ENUM_VALUES {
-	REF_VALUE(value0),
-	REF_VALUE(value1),
-	REF_VALUE(value2),
-	REF_VALUE(value3),
-	REF_VALUE(value4),
-	REF_VALUE(value5),
-	REF_VALUE(value6),
-	REF_VALUE(value7),
-	REF_VALUE(value8),
-	REF_VALUE(value9),
+	REF_VALUE(value0)
+	REF_VALUE(value1)
+	REF_VALUE(value2)
+	REF_VALUE(value3)
+	REF_VALUE(value4)
+	REF_VALUE(value5)
+	REF_VALUE(value6)
+	REF_VALUE(value7)
+	REF_VALUE(value8)
+	REF_VALUE(value9)
 	REF_VALUE(COUNT, hidden)
 } REF_END;
 
-REFLECT(nested::base_object)
-	MEMBERS {
-		REF_MEMBER(name)
-	}
-	STATIC_MEMBERS {
-		REF_STATIC_MEMBER(num_objects)
-	}
-REF_END;
+REFLECT(nested::transform) MEMBERS {
+	REF_MEMBER(position)
+	REF_MEMBER(scale)
+	REF_MEMBER(rotation)
+	REF_MEMBER(space)
+	REF_MEMBER(value)
+} REF_END;
+
+REFLECT(nested::base_object) MEMBERS {
+	REF_MEMBER(name)
+	REF_MEMBER(world_transform)
+	REF_MEMBER(local_transform)
+	REF_MEMBER(previous_positions)
+	REF_MEMBER(description)
+} REF_END;
+
+REFLECT(quaternion) MEMBERS {
+	REF_MEMBER(x)
+	REF_MEMBER(y)
+	REF_MEMBER(z)
+	REF_MEMBER(w)
+} REF_END;
 
 REFLECT(vec3) MEMBERS {
-	REF_MEMBER(x),
-	REF_MEMBER(y),
+	REF_MEMBER(x)
+	REF_MEMBER(y)
 	REF_MEMBER(z)
 } REF_END;
 
-REFLECT(float[9]) REF_END;
 REFLECT(mat3) MEMBERS {
 	REF_MEMBER(data)
 } REF_END;
@@ -129,21 +129,21 @@ REFLECT(game_object)
 		REF_BASE(nested::base_object)
 	}
 	MEMBERS {
-		REF_MEMBER(health),
+		REF_MEMBER(health)
 		REF_MEMBER(enabled, editor_only)
+		REF_MEMBER(children)
 	}
 REF_END;
 
-REFLECT(container<int>)
-	MEMBERS {
-		REF_MEMBER(value)
-	}
-	STATIC_MEMBERS {
-		REF_STATIC_MEMBER(static_value)
-	}
-REF_END;
+REFLECT(game_object_group) MEMBERS {
+	REF_MEMBER(objects)
+} REF_END;
 
-REFLECT(std::vector<game_object>) REF_END;
 REFLECT(world) MEMBERS {
 	REF_MEMBER(game_objects)
+} REF_END;
+
+REFLECT(LOUPE_TEMPLATE(pair<int, float>)) MEMBERS {
+	REF_MEMBER(first)
+	REF_MEMBER(second)
 } REF_END;

@@ -1,6 +1,9 @@
 #pragma once
+#include <array>
 #include <string>
+#include <variant>
 #include <vector>
+#include <memory>
 #include <map>
 
 struct hidden {};
@@ -87,7 +90,8 @@ namespace nested
 		transform world_transform;
 		transform local_transform;
 
-		static unsigned num_objects;
+		std::array<vec3, 5> previous_positions;
+		std::variant<const char*, std::string> description;
 	};
 
 	struct base_physics
@@ -98,20 +102,30 @@ namespace nested
 
 struct game_object : public nested::base_object, public nested::base_physics
 {
+	bool operator==(const game_object& other) const { return this == &other; }
+
 	float health = 100.0f;
 	bool enabled = true;
+
+	std::vector<std::shared_ptr<game_object>> children;
+	std::weak_ptr<game_object> parent;
+};
+
+struct game_object_group
+{
+	game_object objects[10];
 };
 
 struct world
 {
-	std::vector<game_object> game_objects;
+	game_object_group game_objects;
 };
 
-template<typename T>
-struct container
+template<typename T, typename U>
+struct pair
 {
-	T value;
-	static inline T static_value;
+	T first;
+	U second;
 };
 
 struct private_data

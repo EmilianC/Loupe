@@ -6,7 +6,7 @@ list(APPEND loupe_files
 	"loupe.cpp"
 	"loupe.h"
 	"loupe.inl"
-	"type_adapters.h"
+	"property_adapters.h"
 )
 
 if (LOUPE_ARCHIVER_CEREAL)

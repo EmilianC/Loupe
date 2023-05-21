@@ -4,7 +4,7 @@
 
 TEST_CASE("Reflection Tests - Enums")
 {
-	loupe::reflection_blob ref = loupe::reflect();
+	loupe::reflection_blob ref = loupe::reflect(0);
 
 	SECTION("Small-Enum")
 	{
@@ -23,10 +23,13 @@ TEST_CASE("Reflection Tests - Enums")
 		REQUIRE(data.entries.size() == 3);
 		CHECK(data.entries[0].name == "local_space");
 		CHECK(data.entries[0].value == 0);
+		CHECK(data.entries[0].has_metadata<hidden>() == false);
 		CHECK(data.entries[1].name == "world_space");
 		CHECK(data.entries[1].value == 1);
+		CHECK(data.entries[1].has_metadata<hidden>() == false);
 		CHECK(data.entries[2].name == "COUNT");
 		CHECK(data.entries[2].value == 2);
+		CHECK(data.entries[2].has_metadata<hidden>() == true);
 
 		REQUIRE(data.find_name(0));
 		REQUIRE(data.find_name(1));
@@ -62,10 +65,13 @@ TEST_CASE("Reflection Tests - Enums")
 		REQUIRE(data.entries.size() == 3);
 		CHECK(data.entries[0].name == "local_space");
 		CHECK(data.entries[0].value == 0);
+		CHECK(data.entries[0].has_metadata<hidden>() == false);
 		CHECK(data.entries[1].name == "world_space");
 		CHECK(data.entries[1].value == 1);
+		CHECK(data.entries[1].has_metadata<hidden>() == false);
 		CHECK(data.entries[2].name == "COUNT");
 		CHECK(data.entries[2].value == 2);
+		CHECK(data.entries[2].has_metadata<hidden>() == true);
 
 		REQUIRE(data.find_name(0));
 		REQUIRE(data.find_name(1));
@@ -101,26 +107,37 @@ TEST_CASE("Reflection Tests - Enums")
 		REQUIRE(data.entries.size() == 11);
 		CHECK(data.entries[0].name == "value0");
 		CHECK(data.entries[0].value == 0);
+		CHECK(data.entries[0].has_metadata<hidden>() == false);
 		CHECK(data.entries[1].name == "value1");
 		CHECK(data.entries[1].value == 1);
+		CHECK(data.entries[1].has_metadata<hidden>() == false);
 		CHECK(data.entries[2].name == "value2");
 		CHECK(data.entries[2].value == 2);
+		CHECK(data.entries[2].has_metadata<hidden>() == false);
 		CHECK(data.entries[3].name == "value3");
 		CHECK(data.entries[3].value == 3);
+		CHECK(data.entries[3].has_metadata<hidden>() == false);
 		CHECK(data.entries[4].name == "value4");
 		CHECK(data.entries[4].value == 4);
+		CHECK(data.entries[4].has_metadata<hidden>() == false);
 		CHECK(data.entries[5].name == "value5");
 		CHECK(data.entries[5].value == 5);
+		CHECK(data.entries[5].has_metadata<hidden>() == false);
 		CHECK(data.entries[6].name == "value6");
 		CHECK(data.entries[6].value == 6);
+		CHECK(data.entries[6].has_metadata<hidden>() == false);
 		CHECK(data.entries[7].name == "value7");
 		CHECK(data.entries[7].value == 7);
+		CHECK(data.entries[7].has_metadata<hidden>() == false);
 		CHECK(data.entries[8].name == "value8");
 		CHECK(data.entries[8].value == 8);
+		CHECK(data.entries[8].has_metadata<hidden>() == false);
 		CHECK(data.entries[9].name == "value9");
 		CHECK(data.entries[9].value == 9);
+		CHECK(data.entries[9].has_metadata<hidden>() == false);
 		CHECK(data.entries[10].name == "COUNT");
 		CHECK(data.entries[10].value == 10);
+		CHECK(data.entries[10].has_metadata<hidden>() == true);
 
 		REQUIRE(data.find_name(0));
 		REQUIRE(data.find_name(1));
@@ -188,26 +205,37 @@ TEST_CASE("Reflection Tests - Enums")
 		REQUIRE(data.entries.size() == 11);
 		CHECK(data.entries[0].name == "value0");
 		CHECK(data.entries[0].value == 0);
+		CHECK(data.entries[0].has_metadata<hidden>() == false);
 		CHECK(data.entries[1].name == "value1");
 		CHECK(data.entries[1].value == 1);
+		CHECK(data.entries[1].has_metadata<hidden>() == false);
 		CHECK(data.entries[2].name == "value2");
 		CHECK(data.entries[2].value == 2);
+		CHECK(data.entries[2].has_metadata<hidden>() == false);
 		CHECK(data.entries[3].name == "value3");
 		CHECK(data.entries[3].value == 3);
+		CHECK(data.entries[3].has_metadata<hidden>() == false);
 		CHECK(data.entries[4].name == "value4");
 		CHECK(data.entries[4].value == 4);
+		CHECK(data.entries[4].has_metadata<hidden>() == false);
 		CHECK(data.entries[5].name == "value5");
 		CHECK(data.entries[5].value == 5);
+		CHECK(data.entries[5].has_metadata<hidden>() == false);
 		CHECK(data.entries[6].name == "value6");
 		CHECK(data.entries[6].value == 6);
+		CHECK(data.entries[6].has_metadata<hidden>() == false);
 		CHECK(data.entries[7].name == "value7");
 		CHECK(data.entries[7].value == 7);
+		CHECK(data.entries[7].has_metadata<hidden>() == false);
 		CHECK(data.entries[8].name == "value8");
 		CHECK(data.entries[8].value == 8);
+		CHECK(data.entries[8].has_metadata<hidden>() == false);
 		CHECK(data.entries[9].name == "value9");
 		CHECK(data.entries[9].value == 9);
+		CHECK(data.entries[9].has_metadata<hidden>() == false);
 		CHECK(data.entries[10].name == "COUNT");
 		CHECK(data.entries[10].value == 10);
+		CHECK(data.entries[10].has_metadata<hidden>() == true);
 
 		REQUIRE(data.find_name(0));
 		REQUIRE(data.find_name(1));

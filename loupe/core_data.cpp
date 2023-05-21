@@ -4,6 +4,16 @@
 
 namespace loupe
 {
+	bool property::operator==(const property& other) const
+	{
+		return signature == other.signature;
+	}
+
+	bool property::operator!=(const property& other) const
+	{
+		return signature != other.signature;
+	}
+
 	bool structure::is_derived_from(const type& type) const
 	{
 		for (const struct type* base : bases)
@@ -28,6 +38,14 @@ namespace loupe
 			}
 		}
 
+		for (const type* base : bases)
+		{
+			if (const member* member = std::get<loupe::structure>(base->data).find_member(var_name))
+			{
+				return member;
+			}
+		}
+
 		return nullptr;
 	}
 
@@ -41,16 +59,11 @@ namespace loupe
 			}
 		}
 
-		return nullptr;
-	}
-
-	const static_member* structure::find_static_member(std::string_view var_name) const
-	{
-		for (const static_member& static_member : static_members)
+		for (const type* base : bases)
 		{
-			if (static_member.name == var_name)
+			if (const member* member = std::get<loupe::structure>(base->data).find_member(offset))
 			{
-				return &static_member;
+				return member;
 			}
 		}
 
@@ -96,6 +109,11 @@ namespace loupe
 		return nullptr;
 	}
 
+	unsigned int reflection_blob::get_version() const
+	{
+		return version;
+	}
+
 	const type* reflection_blob::find(std::string_view name) const
 	{
 		auto itr = std::lower_bound(types.begin(), types.end(), name, [](const type& type, std::string_view name) {
@@ -109,147 +127,116 @@ namespace loupe
 
 		return nullptr;
 	}
+
+	const property* reflection_blob::find_property(std::string_view signature) const
+	{
+		auto itr = std::lower_bound(properties.begin(), properties.end(), signature, [](const property& property, std::string_view signature) {
+			return property.signature < signature;
+		});
+
+		if (itr != properties.end() && itr->signature == signature)
+		{
+			return &(*itr);
+		}
+
+		return nullptr;
+	}
+
+	const std::vector<type>& reflection_blob::get_types() const
+	{
+		return types;
+	}
+
+	const std::vector<property>& reflection_blob::get_properties() const
+	{
+		return properties;
+	}
 }
 
 /// Fundamental types ///
-REFLECT(void)                    REF_END;
-REFLECT(short int)               REF_END;
-REFLECT(int)                     REF_END;
-REFLECT(long int)                REF_END;
-REFLECT(long long int)           REF_END;
-REFLECT(unsigned short int)      REF_END;
-REFLECT(unsigned int)            REF_END;
-REFLECT(unsigned long int)       REF_END;
-REFLECT(unsigned long long int)  REF_END;
-REFLECT(char)                    REF_END;
-REFLECT(unsigned char)           REF_END;
-REFLECT(char8_t)                 REF_END;
-REFLECT(char16_t)                REF_END;
-REFLECT(char32_t)                REF_END;
-REFLECT(wchar_t)                 REF_END;
-REFLECT(bool)                    REF_END;
-REFLECT(float)                   REF_END;
-REFLECT(double)                  REF_END;
-REFLECT(long double)             REF_END;
-REFLECT(std::byte)               REF_END;
+REFLECT_SIMPLE(void);
+REFLECT_SIMPLE(short int);
+REFLECT_SIMPLE(int);
+REFLECT_SIMPLE(long int);
+REFLECT_SIMPLE(long long int);
+REFLECT_SIMPLE(unsigned short int);
+REFLECT_SIMPLE(unsigned int);
+REFLECT_SIMPLE(unsigned long int);
+REFLECT_SIMPLE(unsigned long long int);
+REFLECT_SIMPLE(char);
+REFLECT_SIMPLE(unsigned char);
+REFLECT_SIMPLE(char8_t);
+REFLECT_SIMPLE(char16_t);
+REFLECT_SIMPLE(char32_t);
+REFLECT_SIMPLE(wchar_t);
+REFLECT_SIMPLE(bool);
+REFLECT_SIMPLE(float);
+REFLECT_SIMPLE(double);
+REFLECT_SIMPLE(long double);
 
-REFLECT(void*)                   REF_END;
-REFLECT(short int*)              REF_END;
-REFLECT(int*)                    REF_END;
-REFLECT(long int*)               REF_END;
-REFLECT(long long int*)          REF_END;
-REFLECT(unsigned short int*)     REF_END;
-REFLECT(unsigned int*)           REF_END;
-REFLECT(unsigned long int*)      REF_END;
-REFLECT(unsigned long long int*) REF_END;
-REFLECT(char*)                   REF_END;
-REFLECT(unsigned char*)          REF_END;
-REFLECT(char8_t*)                REF_END;
-REFLECT(char16_t*)               REF_END;
-REFLECT(char32_t*)               REF_END;
-REFLECT(wchar_t*)                REF_END;
-REFLECT(bool*)                   REF_END;
-REFLECT(float*)                  REF_END;
-REFLECT(double*)                 REF_END;
-REFLECT(long double*)            REF_END;
-REFLECT(std::byte*)              REF_END;
-
-
-/// Non-generic standard types ///
-REFLECT(std::string)      REF_END;
-REFLECT(std::string_view) REF_END;
-
-
-/// Fundamental type arrays ///
-REFLECT(std::vector<short int>)              REF_END;
-REFLECT(std::vector<int>)                    REF_END;
-REFLECT(std::vector<long int>)               REF_END;
-REFLECT(std::vector<long long int>)          REF_END;
-REFLECT(std::vector<unsigned short int>)     REF_END;
-REFLECT(std::vector<unsigned int>)           REF_END;
-REFLECT(std::vector<unsigned long int>)      REF_END;
-REFLECT(std::vector<unsigned long long int>) REF_END;
-REFLECT(std::vector<char>)                   REF_END;
-REFLECT(std::vector<unsigned char>)          REF_END;
-REFLECT(std::vector<char8_t>)                REF_END;
-REFLECT(std::vector<char16_t>)               REF_END;
-REFLECT(std::vector<char32_t>)               REF_END;
-REFLECT(std::vector<wchar_t>)                REF_END;
-REFLECT(std::vector<float>)                  REF_END;
-REFLECT(std::vector<double>)                 REF_END;
-REFLECT(std::vector<long double>)            REF_END;
-REFLECT(std::vector<std::byte>)              REF_END;
-REFLECT(std::vector<std::string>)            REF_END;
-
+/// Standard Types ///
+REFLECT_SIMPLE(std::byte);
+REFLECT_SIMPLE(std::monostate);
+REFLECT_SIMPLE(std::string);
+REFLECT_SIMPLE(std::string_view);
 
 /// Reflect our own types ///
 REFLECT(loupe::enum_entry) MEMBERS {
-	REF_MEMBER(name),
-	REF_MEMBER(value),
+	REF_MEMBER(name)
+	REF_MEMBER(value)
 	REF_MEMBER(metadata)
 } REF_END;
 
 REFLECT(loupe::member) MEMBERS {
-	REF_MEMBER(name),
-	REF_MEMBER(offset),
-	REF_MEMBER(type),
-	REF_MEMBER(is_const),
-	REF_MEMBER(metadata)
-} REF_END;
-
-REFLECT(loupe::static_member) MEMBERS {
-	REF_MEMBER(name),
-	REF_MEMBER(address),
-	REF_MEMBER(type),
-	REF_MEMBER(is_const),
+	REF_MEMBER(name)
+	REF_MEMBER(offset)
+	REF_MEMBER(data)
 	REF_MEMBER(metadata)
 } REF_END;
 
 REFLECT(loupe::structure) MEMBERS {
-	REF_MEMBER(members),
-	REF_MEMBER(static_members),
+	REF_MEMBER(members)
 	REF_MEMBER(bases)
 } REF_END;
 
 REFLECT(loupe::enumeration) MEMBERS {
-	REF_MEMBER(underlying_type),
+	REF_MEMBER(underlying_type)
 	REF_MEMBER(entries)
 } REF_END;
 
 REFLECT(loupe::pointer) MEMBERS {
-	REF_MEMBER(target_type)
+	REF_MEMBER(target_property)
+	REF_MEMBER(is_target_const)
 } REF_END;
 
 REFLECT(loupe::array) MEMBERS {
-	REF_MEMBER(element_type),
+	REF_MEMBER(element_property)
 	REF_MEMBER(dynamic)
 } REF_END;
 
 REFLECT(loupe::map) MEMBERS {
-	REF_MEMBER(key_type),
-	REF_MEMBER(value_type)
+	REF_MEMBER(key_property)
+	REF_MEMBER(value_property)
 } REF_END;
 
 REFLECT(loupe::variant) MEMBERS {
 	REF_MEMBER(alternatives)
 } REF_END;
 
-REFLECT(loupe::fundamental) REF_END;
+REFLECT(loupe::property) MEMBERS {
+	REF_MEMBER(signature)
+	REF_MEMBER(data)
+} REF_END;
 
-REFLECT(loupe::type*) REF_END;
+REFLECT_SIMPLE(loupe::fundamental);
+
 REFLECT(loupe::type) MEMBERS {
-	REF_MEMBER(name),
-	REF_MEMBER(size),
-	REF_MEMBER(alignment),
+	REF_MEMBER(name)
+	REF_MEMBER(size)
+	REF_MEMBER(alignment)
 	REF_MEMBER(data)
 } REF_END;
 
 REFLECT(loupe::reflection_blob) MEMBERS {
-	REF_MEMBER(types)
+	//REF_MEMBER(types)
 } REF_END;
-
-REFLECT(std::vector<loupe::enum_entry>)      REF_END;
-REFLECT(std::vector<loupe::member>)          REF_END;
-REFLECT(std::vector<loupe::static_member>)   REF_END;
-REFLECT(std::vector<loupe::type>)            REF_END;
-REFLECT(std::vector<loupe::type*>)           REF_END;

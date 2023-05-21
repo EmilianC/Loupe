@@ -3,18 +3,28 @@
 
 TEST_CASE("Reflection Tests - Blobs")
 {
-	loupe::reflection_blob ref      = loupe::reflect();
-	loupe::reflection_blob ref_copy = loupe::reflect();
+	loupe::reflection_blob ref      = loupe::reflect(0);
+	loupe::reflection_blob ref_copy = loupe::reflect(0);
 
-	REQUIRE(!ref.types.empty());
-	REQUIRE(ref.types.size() == ref_copy.types.size());
-	for (unsigned i = 0; i < ref.types.size(); ++i)
+	REQUIRE(ref.get_version() == ref_copy.get_version());
+
+	REQUIRE(!ref.get_types().empty());
+	REQUIRE(ref.get_types().size() == ref_copy.get_types().size());
+	for (unsigned i = 0; i < ref.get_types().size(); ++i)
 	{
-		CHECK(ref.types[i].name == ref_copy.types[i].name);
-		CHECK(ref.types[i].size == ref_copy.types[i].size);
-		CHECK(ref.types[i].alignment == ref_copy.types[i].alignment);
-		CHECK(ref.types[i].data.index() == ref_copy.types[i].data.index());
-		CHECK(!!ref.types[i].construct == !!ref_copy.types[i].construct);
-		CHECK(!!ref.types[i].construct_at == !!ref_copy.types[i].construct_at);
+		CHECK(ref.get_types()[i].name == ref_copy.get_types()[i].name);
+		CHECK(ref.get_types()[i].size == ref_copy.get_types()[i].size);
+		CHECK(ref.get_types()[i].alignment == ref_copy.get_types()[i].alignment);
+		CHECK(ref.get_types()[i].data.index() == ref_copy.get_types()[i].data.index());
+		CHECK(ref.get_types()[i].construct == ref_copy.get_types()[i].construct);
+		CHECK(ref.get_types()[i].construct_at == ref_copy.get_types()[i].construct_at);
+	}
+
+	REQUIRE(!ref.get_properties().empty());
+	REQUIRE(ref.get_properties().size() == ref_copy.get_properties().size());
+	for (unsigned i = 0; i < ref.get_properties().size(); ++i)
+	{
+		CHECK(ref.get_properties()[i].signature == ref_copy.get_properties()[i].signature);
+		CHECK(ref.get_properties()[i].data.index() == ref_copy.get_properties()[i].data.index());
 	}
 }

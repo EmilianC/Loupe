@@ -7,5 +7,5 @@
 
 TEST_CASE("Reflection Tests - Serialization")
 {
-	loupe::reflection_blob ref = loupe::reflect();
+	loupe::reflection_blob ref = loupe::reflect(0);
 }

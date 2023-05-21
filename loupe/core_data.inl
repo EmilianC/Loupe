@@ -51,6 +51,12 @@ namespace loupe
 		return detail::get_type_name<std::remove_cv_t<Type>>();
 	}
 
+	template<typename... Visitors>
+	auto property::visit(Visitors&&... visitors) const
+	{
+		return std::visit(detail::overload{ std::forward<Visitors>(visitors)... }, data);
+	}
+
 	template<typename Tag> [[nodiscard]]
 	bool metadata_container::has_metadata() const
 	{
@@ -68,12 +74,18 @@ namespace loupe
 	template<typename... Visitors>
 	auto type::visit(Visitors&&... visitors) const
 	{
-		return std::visit(detail::overload { std::forward<Visitors>(visitors)... }, data);
+		return std::visit(detail::overload{ std::forward<Visitors>(visitors)... }, data);
 	}
 
 	template<typename Type> [[nodiscard]]
 	const type* reflection_blob::find() const
 	{
 		return find(get_type_name<Type>());
+	}
+
+	template<typename Property> [[nodiscard]]
+	const property* reflection_blob::find_property() const
+	{
+		return find_property(get_type_name<Property>());
 	}
 }

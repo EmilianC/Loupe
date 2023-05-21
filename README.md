@@ -5,24 +5,23 @@ An extendible reflection library for modern C++, designed with game development 
 # Design goals
 Loupe's API is designed to be small and easy to use. Instead of scanning pre-main, Loupe produces your application's reflection tables when requested - you may store the result of this globally if you wish. Your reflection tables can be serialized to disk along with your data, allowing you to read data back safely even as your application continues to change.
 
-The core Loupe API does not require Run-Time Type Information (RRTI) or Exceptions, and is dependent only on the C++ standard library. Serialization backends should be implemented user-side so that you can chose your own archiver and better handle custom data. However, an archiver using `Cereal` is provided by default (which can at least serve as an example for creating your own).
+The core Loupe API does not require Run-Time Type Information (RTTI) or Exceptions, and is dependent only on the C++ standard library. Serialization backends should be implemented user-side so that you can chose your own archiver and better handle custom data. However, an archiver using `Cereal` is provided by default (which can at least serve as an example for creating your own).
 
 # 1.0 Target Features
 - [ ] Diff between blobs to detect and reconcile changes
-- [ ] Support for standard containers (vector, array, map, etc.)
+- [x] Support for standard containers (vector, array, map, set, etc.)
+- [x] Support for user defined containers
 - [ ] Serialization ready (bring your own archiver)
 - [x] User-defined metadata attributes
 
 # Post 1.0 Features
 - Reflecting and invoking functions
-- Automatic type registration (no need to reflect vector<my_class>, float[9] etc.)
 - Single header include option
 - Blob coverage detection, serializing only visited properties
 - Support beyond the Windows platform
 - Debugger .natvis files
 - Support for custom allocators
 - Stateful Metadata (such as a range bound for floats)
-- Versioning for serialized blobs
 
 # Quick Usage
 
@@ -37,10 +36,12 @@ enum class small_enum
 	COUNT
 };
 
-struct vec3 {
+struct vec4
+{
 	float x = 0.0f;
 	float y = 0.0f;
 	float z = 0.0f;
+	float w = 1.0f;
 };
 
 
@@ -48,18 +49,19 @@ struct vec3 {
 #include "loupe.h"
 
 // Metadata tags must also be reflected.
-REFLECT(hidden) REF_END;
+REFLECT_SIMPLE(hidden);
 
 REFLECT(small_enum) ENUM_VALUES {
-	REF_VALUE(value0),
-	REF_VALUE(value1),
+	REF_VALUE(value0)
+	REF_VALUE(value1)
 	REF_VALUE(COUNT, hidden)
 } REF_END;
 
-REFLECT(vec3) MEMBERS {
-	REF_MEMBER(x),
-	REF_MEMBER(y),
+REFLECT(vec4) MEMBERS {
+	REF_MEMBER(x)
+	REF_MEMBER(y)
 	REF_MEMBER(z)
+	REF_MEMBER(w, hidden)
 } REF_END;
 
 
@@ -84,24 +86,21 @@ int main()
 	}
 
 	// Type lookup can also be done directly with known types.
-	const loupe::type* float_type = blob.find<float>();
-	const loupe::type* vec3_type  = blob.find<vec3>();
+	const loupe::type* vec4_type = blob.find<vec4>();
 	// Visitation can respond to any of the type categories.
-	vec3_type->visit(
+	vec4_type->visit(
+		[&](const loupe::fundamental& data) { /*...*/ },
 		[&](const loupe::structure& data) {
+			const loupe::property* float_property = blob.find_property<float>();
 			for (const loupe::member& member : data.members)
 			{
-				print(member.name);               // "x",    "y",    "z"
-				print(member.offset);             //  0,      4,      8
-				print(member.type == float_type); // "true", "true", "true"
+				print(member.name);                   // "x",     "y",     "z",     "w"
+				print(member.offset);                 //  0,       4,       8,       12
+				print(member.data == float_property); // "true",  "true",  "true",  "true"
+				print(member.has_metadata<hidden>()); // "false", "false", "false", "true"
 			}
 		},
-		[&](const loupe::enumeration& data) { /*...*/ },
-		[&](const loupe::pointer& data)     { /*...*/ },
-		[&](const loupe::array& data)       { /*...*/ },
-		[&](const loupe::map& data)         { /*...*/ },
-		[&](const loupe::variant& data)     { /*...*/ },
-		[&](const loupe::fundamental& data) { /*...*/ }
+		[&](const loupe::enumeration& data) { /*...*/ }
 	);
 }
 ```
