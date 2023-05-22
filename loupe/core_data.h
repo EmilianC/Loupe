@@ -160,7 +160,7 @@ namespace loupe
 		[[nodiscard]] const property* find_property(std::string_view signature) const;
 		
 	private:
-		unsigned int version;
+		unsigned int version = 0;
 		std::vector<type> types;
 		std::vector<property> properties;
 
