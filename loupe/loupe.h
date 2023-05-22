@@ -6,13 +6,15 @@
 namespace loupe
 {
 	// The starting point for retrieving reflection data. This cannot be
-	// called before main() (during static initialization). You may still
-	// store this result statically/globally in your program at the top
-	// of your main() function, or whenever you wish afterwards.
-	[[nodiscard]] reflection_blob reflect(unsigned int current_version);
+	// called before main() (during static initialization). However you may
+	// still store the result of this function in a globally accessible variable.
+	//
+	// The `current_program_version` can be used to identify reflection_blobs
+	// generated from different compiled version of the program (when loaded from disk).
+	[[nodiscard]] reflection_blob reflect(unsigned int current_program_version = 1);
 
 	// Clears the global static task lists, which will reclaim some memory.
-	// However, calling reflect() afterwards will result in an empty result.
+	// However, calling reflect() afterwards will produce an empty result.
 	void clear_reflect_tasks();
 }
 

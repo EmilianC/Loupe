@@ -4,7 +4,7 @@
 
 TEST_CASE("Reflection Tests - Enums")
 {
-	loupe::reflection_blob ref = loupe::reflect(0);
+	loupe::reflection_blob ref = loupe::reflect();
 
 	SECTION("Small-Enum")
 	{

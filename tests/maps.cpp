@@ -4,5 +4,5 @@
 
 TEST_CASE("Reflection Tests - Maps")
 {
-	loupe::reflection_blob ref = loupe::reflect(0);
+	loupe::reflection_blob ref = loupe::reflect();
 }

@@ -3,10 +3,13 @@
 
 TEST_CASE("Reflection Tests - Blobs")
 {
-	loupe::reflection_blob ref      = loupe::reflect(0);
-	loupe::reflection_blob ref_copy = loupe::reflect(0);
+	loupe::reflection_blob ref      = loupe::reflect();
+	loupe::reflection_blob ref_copy = loupe::reflect();
+	loupe::reflection_blob ref_local;
 
-	REQUIRE(ref.get_version() == ref_copy.get_version());
+	CHECK(ref_local.get_version() == 0);
+	REQUIRE(ref.get_version() == 1);
+	REQUIRE(ref_copy.get_version() == 1);
 
 	REQUIRE(!ref.get_types().empty());
 	REQUIRE(ref.get_types().size() == ref_copy.get_types().size());
@@ -24,6 +27,7 @@ TEST_CASE("Reflection Tests - Blobs")
 	REQUIRE(ref.get_properties().size() == ref_copy.get_properties().size());
 	for (unsigned i = 0; i < ref.get_properties().size(); ++i)
 	{
+		CHECK(ref.get_properties()[i] == ref_copy.get_properties()[i]);
 		CHECK(ref.get_properties()[i].signature == ref_copy.get_properties()[i].signature);
 		CHECK(ref.get_properties()[i].data.index() == ref_copy.get_properties()[i].data.index());
 	}

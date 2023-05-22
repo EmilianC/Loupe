@@ -39,10 +39,12 @@ namespace loupe
 		}
 	}
 
-	reflection_blob reflect(unsigned int current_version)
+	reflection_blob reflect(unsigned int current_program_version)
 	{
+		LOUPE_ASSERT(current_program_version > 0, "The program version id must be greater than zero.");
+
 		reflection_blob blob;
-		blob.version = current_version;
+		blob.version = current_program_version;
 
 		auto& tasks = detail::get_tasks();
 		// The final array of types needs to be sorted to allow for faster lookups.

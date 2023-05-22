@@ -3,5 +3,5 @@
 
 TEST_CASE("Reflection Tests - Fundamentals")
 {
-	loupe::reflection_blob ref = loupe::reflect(0);
+	loupe::reflection_blob ref = loupe::reflect();
 }
