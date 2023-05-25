@@ -1,4 +1,6 @@
 #pragma once
+#include "loupe/private_members.h"
+
 #include <array>
 #include <string>
 #include <variant>
@@ -130,10 +132,12 @@ struct pair
 
 struct private_data
 {
-	//FRIEND_LOUPE;
-
 protected:
 	vec3 position;
 private:
 	quaternion rotation;
+
+public:
+	PRIVATE_MEMBER(private_data, position);
+	PRIVATE_MEMBER(private_data, rotation);
 };

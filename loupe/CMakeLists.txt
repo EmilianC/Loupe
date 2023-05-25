@@ -6,6 +6,7 @@ list(APPEND loupe_files
 	"loupe.cpp"
 	"loupe.h"
 	"loupe.inl"
+	"private_members.h"
 	"property_adapters.h"
 )
 

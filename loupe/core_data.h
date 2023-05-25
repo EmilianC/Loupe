@@ -1,5 +1,7 @@
 // Copyright (c) 2022 Emilian Cioca
 #pragma once
+#include "private_members.h"
+
 #include <any>
 #include <memory>
 #include <string_view>
@@ -160,11 +162,16 @@ namespace loupe
 		[[nodiscard]] const property* find_property(std::string_view signature) const;
 		
 	private:
+		friend reflection_blob reflect(unsigned int);
+
 		unsigned int version = 0;
 		std::vector<type> types;
 		std::vector<property> properties;
 
-		friend reflection_blob reflect(unsigned int);
+	public:
+		PRIVATE_MEMBER(reflection_blob, version);
+		PRIVATE_MEMBER(reflection_blob, types);
+		PRIVATE_MEMBER(reflection_blob, properties);
 	};
 }
 

@@ -1,6 +1,7 @@
 // Copyright (c) 2022 Emilian Cioca
 #pragma once
 #include "assert.h"
+#include "private_members.h"
 #include "property_adapters.h"
 
 namespace loupe
@@ -53,15 +54,15 @@ static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected."); 
 	; std::vector<loupe::member>& members = std::get<loupe::structure>(type.data).members; \
 	int count = 0;                                                                         \
 	loupe::detail::on_scope_exit reserver = [&] { members.reserve(count); };
-#define REF_MEMBER(member, ...)                                                                                                                          \
-	++count;                                                                                                                                             \
-	if (stage == loupe::detail::task_data_stage::scan_properties)                                                                                        \
-	{                                                                                                                                                    \
-		loupe::detail::register_property<decltype(reflected_type::member)>(blob, properties);                                                            \
-	}                                                                                                                                                    \
-	else if (stage == loupe::detail::task_data_stage::members)                                                                                           \
-	{                                                                                                                                                    \
-		members.push_back(loupe::detail::create_member<decltype(reflected_type::member), __VA_ARGS__>(blob, #member, offsetof(reflected_type, member))); \
+#define REF_MEMBER(member, ...)                                                                                                                                    \
+	++count;                                                                                                                                                       \
+	if (stage == loupe::detail::task_data_stage::scan_properties)                                                                                                  \
+	{                                                                                                                                                              \
+		loupe::detail::register_property<decltype(reflected_type::member)>(blob, properties);                                                                      \
+	}                                                                                                                                                              \
+	else if (stage == loupe::detail::task_data_stage::members)                                                                                                     \
+	{                                                                                                                                                              \
+		members.push_back(loupe::detail::create_member<decltype(reflected_type::member), __VA_ARGS__>(blob, #member, __builtin_offsetof(reflected_type, member))); \
 	}
 
 #define REF_END ;});
