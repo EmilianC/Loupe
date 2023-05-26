@@ -36,6 +36,9 @@ namespace loupe::adapters
 	};
 
 	template<typename Type>
+	struct pointer_adapter<Type* const> : public pointer_adapter<Type*> {};
+
+	template<typename Type>
 	struct pointer_adapter<std::shared_ptr<Type>> : public std::true_type
 	{
 		using TargetType = std::remove_cv_t<Type>;
