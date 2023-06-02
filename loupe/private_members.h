@@ -21,7 +21,7 @@ public: // Must be in a public section.
 // my_struct.cpp
 REFLECT(my_struct)
 	MEMBERS {
-		REF_MEMBER(bool_value);
+		REF_MEMBER(bool_value)
 		REF_PRIVATE_MEMBER(int_value)
 		REF_PRIVATE_MEMBER(float_value)
 	}
