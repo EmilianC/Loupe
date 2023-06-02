@@ -13,8 +13,13 @@ namespace loupe
 		consteval std::string_view get_type_name()
 		{
 			std::string_view result = __FUNCSIG__;
+#ifdef __clang__
+			const std::string_view function_start_tag = "[Type = ";
+			const std::string_view function_end_tag = "]";
+#else
 			const std::string_view function_start_tag = "get_type_name<";
 			const std::string_view function_end_tag = ">(";
+#endif
 			const std::string_view enum_tag = "enum ";
 			const std::string_view class_tag = "class ";
 			const std::string_view struct_tag = "struct ";
