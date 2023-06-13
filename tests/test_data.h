@@ -109,6 +109,8 @@ struct game_object : public nested::base_object, public nested::base_physics
 	float health = 100.0f;
 	bool enabled = true;
 
+	std::reference_wrapper<mat3> matrix;
+
 	std::vector<std::shared_ptr<game_object>> children;
 	std::weak_ptr<game_object> parent;
 };

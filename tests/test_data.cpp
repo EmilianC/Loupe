@@ -131,7 +131,9 @@ REFLECT(game_object)
 	MEMBERS {
 		REF_MEMBER(health)
 		REF_MEMBER(enabled, editor_only)
+		REF_MEMBER(matrix)
 		REF_MEMBER(children)
+		REF_MEMBER(parent)
 	}
 REF_END;
 

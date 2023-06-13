@@ -4,13 +4,14 @@
 #include "core_data.h"
 
 #include <concepts>
+#include <functional>
 #include <iterator>
 #include <list>
-#include <set>
-#include <unordered_set>
 #include <map>
-#include <unordered_map>
+#include <set>
 #include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace loupe::adapters
 {
@@ -30,13 +31,33 @@ namespace loupe::adapters
 			return {
 				.target_property = target_property,
 				.is_target_const = std::is_const_v<Type>,
-				.get_target_address = [](void* pointer) { return pointer; }
+				.get_target_address = [](void* pointer) -> void* { return pointer; }
 			};
 		}
 	};
 
 	template<typename Type>
 	struct pointer_adapter<Type* const> : public pointer_adapter<Type*> {};
+
+	template<typename Type>
+	struct pointer_adapter<std::reference_wrapper<Type>> : public std::true_type
+	{
+		using TargetType = std::remove_cv_t<Type>;
+
+		[[nodiscard]] static pointer make_data(const reflection_blob& blob)
+		{
+			const property* target_property = blob.find_property<TargetType>();
+			LOUPE_ASSERT(target_property, "The reference's target type was not registered. It must be reflected separately.");
+
+			return {
+				.target_property = target_property,
+				.is_target_const = std::is_const_v<Type>,
+				.get_target_address = [](void* pointer) -> void* {
+					return &static_cast<std::reference_wrapper<Type>*>(pointer)->get();
+				}
+			};
+		}
+	};
 
 	template<typename Type>
 	struct pointer_adapter<std::shared_ptr<Type>> : public std::true_type
