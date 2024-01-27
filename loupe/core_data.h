@@ -4,6 +4,7 @@
 
 #include <any>
 #include <memory>
+#include <span>
 #include <string_view>
 #include <variant>
 #include <vector>
@@ -150,8 +151,8 @@ namespace loupe
 		reflection_blob& operator=(reflection_blob&&) = default;
 
 		[[nodiscard]] unsigned int get_version() const;
-		[[nodiscard]] const std::vector<type>& get_types() const;
-		[[nodiscard]] const std::vector<property>& get_properties() const;
+		[[nodiscard]] std::span<const type> get_types() const;
+		[[nodiscard]] std::span<const property> get_properties() const;
 
 		template<typename Type>
 		[[nodiscard]] const type* find() const;

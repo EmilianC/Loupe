@@ -142,12 +142,12 @@ namespace loupe
 		return nullptr;
 	}
 
-	const std::vector<type>& reflection_blob::get_types() const
+	std::span<const type> reflection_blob::get_types() const
 	{
 		return types;
 	}
 
-	const std::vector<property>& reflection_blob::get_properties() const
+	std::span<const property> reflection_blob::get_properties() const
 	{
 		return properties;
 	}
