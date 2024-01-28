@@ -161,6 +161,7 @@ namespace loupe::detail
 	void* make_user_constructor()
 	{
 		static_assert(sizeof...(Args) > 0, "Use \"default_construct_at\" instead of user constructors if no arguments are required.");
+		static_assert(std::is_class_v<Type>, "User Constructors are only supported on structure/class types.");
 
 		return +[](void* location, Args&&...args) {
 			new (location) Type(std::forward<Args>(args)...);
