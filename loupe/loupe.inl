@@ -105,16 +105,16 @@ namespace loupe::detail
 				};
 			}
 
-			if constexpr (std::is_destructible_v<reflected_type> && !std::is_trivially_destructible_v<reflected_type>)
-			{
-				type.destruct_at = [](void* location) {
-					static_cast<reflected_type*>(location)->~reflected_type();
-				};
-			}
-
 			if constexpr (std::is_class_v<reflected_type>)
 			{
 				type.data = loupe::structure{};
+
+				if constexpr (std::is_destructible_v<reflected_type> && !std::is_trivially_destructible_v<reflected_type>)
+				{
+					type.destruct_at = [](void* location) {
+						static_cast<reflected_type*>(location)->~reflected_type();
+					};
+				}
 			}
 			else if constexpr (std::is_enum_v<reflected_type>)
 			{
