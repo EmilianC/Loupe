@@ -99,15 +99,17 @@ namespace loupe::detail
 			type.alignment = alignof(reflected_type);
 			if constexpr (std::is_default_constructible_v<reflected_type>)
 			{
-				type.construct_at = [](void* location) {
-					LOUPE_ASSERT(reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) != 0, "Construction location for type is misaligned.");
+				type.default_construct_at = [](void* location) {
+					LOUPE_ASSERT(reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) == 0, "Construction location for type is misaligned.");
 					new (location) reflected_type;
 				};
+			}
 
-				if constexpr (std::is_trivially_copyable_v<reflected_type>)
-				{
-					type.construct = [] { return std::make_any<reflected_type>(); };
-				}
+			if constexpr (std::is_destructible_v<reflected_type> && !std::is_trivially_destructible_v<reflected_type>)
+			{
+				type.destruct_at = [](void* location) {
+					static_cast<reflected_type*>(location)->~reflected_type();
+				};
 			}
 
 			if constexpr (std::is_class_v<reflected_type>)
@@ -153,6 +155,16 @@ namespace loupe::detail
 		}
 
 		return entry;
+	}
+
+	template<typename Type, typename... Args>
+	void* make_user_constructor()
+	{
+		static_assert(sizeof...(Args) > 0, "Use \"default_construct_at\" instead of user constructors if no arguments are required.");
+
+		return +[](void* location, Args&&...args) {
+			new (location) Type(std::forward<Args>(args)...);
+		};
 	}
 
 	template<typename Type, typename... Tags>

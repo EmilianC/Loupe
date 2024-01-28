@@ -3,6 +3,7 @@ list(APPEND loupe_test_files
 	"blob.cpp"
 	"enums.cpp"
 	"fundamentals.cpp"
+	"lifetimes.cpp"
 	"main.cpp"
 	"maps.cpp"
 	"pointers.cpp"

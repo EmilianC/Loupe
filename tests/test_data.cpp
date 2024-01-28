@@ -99,13 +99,16 @@ REFLECT(nested::transform) MEMBERS {
 	REF_MEMBER(value)
 } REF_END;
 
-REFLECT(nested::base_object) MEMBERS {
-	REF_MEMBER(name)
-	REF_MEMBER(world_transform)
-	REF_MEMBER(local_transform)
-	REF_MEMBER(previous_positions)
-	REF_MEMBER(description)
-} REF_END;
+REFLECT(nested::base_object)
+	USER_CONSTRUCTOR(std::string)
+	MEMBERS {
+		REF_MEMBER(name)
+		REF_MEMBER(world_transform)
+		REF_MEMBER(local_transform)
+		REF_MEMBER(previous_positions)
+		REF_MEMBER(description)
+	}
+REF_END;
 
 REFLECT(quaternion) MEMBERS {
 	REF_MEMBER(x)

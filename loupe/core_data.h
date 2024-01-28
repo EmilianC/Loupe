@@ -1,8 +1,8 @@
 // Copyright (c) 2022 Emilian Cioca
 #pragma once
+#include "assert.h"
 #include "private_members.h"
 
-#include <any>
 #include <memory>
 #include <span>
 #include <string_view>
@@ -137,8 +137,17 @@ namespace loupe
 		template<typename... Visitors>
 		auto visit(Visitors&&... visitors) const;
 
-		std::any (*construct)() = nullptr;
-		void (*construct_at)(void* location) = nullptr;
+		// Calls the user constructor reflected through the USER_CONSTRUCTOR(...) macro.
+		// ! Must be called with exactly the reflected arguments specified in the macro !
+		template<typename... Args>
+		void user_construct_at(void* location, Args&&... args) const;
+
+		// Only public constructors are bound.
+		void (*default_construct_at)(void* location) = nullptr;
+		// Only public destructors that are non-trivial are bound.
+		void (*destruct_at)(void* location) = nullptr;
+
+		void* user_constructor = nullptr;
 	};
 
 	//

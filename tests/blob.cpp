@@ -19,8 +19,9 @@ TEST_CASE("Reflection Tests - Blobs")
 		CHECK(ref.get_types()[i].size == ref_copy.get_types()[i].size);
 		CHECK(ref.get_types()[i].alignment == ref_copy.get_types()[i].alignment);
 		CHECK(ref.get_types()[i].data.index() == ref_copy.get_types()[i].data.index());
-		CHECK(ref.get_types()[i].construct == ref_copy.get_types()[i].construct);
-		CHECK(ref.get_types()[i].construct_at == ref_copy.get_types()[i].construct_at);
+		CHECK(ref.get_types()[i].default_construct_at == ref_copy.get_types()[i].default_construct_at);
+		CHECK(ref.get_types()[i].destruct_at == ref_copy.get_types()[i].destruct_at);
+		CHECK(ref.get_types()[i].user_constructor == ref_copy.get_types()[i].user_constructor);
 	}
 
 	REQUIRE(!ref.get_properties().empty());

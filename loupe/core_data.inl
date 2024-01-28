@@ -82,6 +82,15 @@ namespace loupe
 		return std::visit(detail::overload{ std::forward<Visitors>(visitors)... }, data);
 	}
 
+	template<typename... Args>
+	void type::user_construct_at(void* location, Args&&... args) const
+	{
+		LOUPE_ASSERT(user_constructor, "A custom user constructor was not bound for this type.");
+
+		auto* func = static_cast<void(*)(void*, Args...)>(user_constructor);
+		func(location, std::forward<Args>(args)...);
+	}
+
 	template<typename Type> [[nodiscard]]
 	const type* reflection_blob::find() const
 	{

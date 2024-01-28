@@ -88,12 +88,18 @@ namespace nested
 
 	struct base_object
 	{
+		base_object() { ++count; }
+		base_object(std::string new_name) : name(std::move(new_name)) { ++count; }
+		~base_object() { --count; }
+
 		std::string name;
 		transform world_transform;
 		transform local_transform;
 
 		std::array<vec3, 5> previous_positions;
 		std::variant<const char*, std::string> description;
+
+		static inline std::size_t count = 0;
 	};
 
 	struct base_physics
