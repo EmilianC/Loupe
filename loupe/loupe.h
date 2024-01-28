@@ -50,7 +50,7 @@ static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected."); 
 #define BASES                 if (stage == loupe::detail::task_data_stage::bases) std::get<loupe::structure>(type.data).bases =
 #define REF_BASE(base_type)   loupe::detail::find_base<base_type, reflected_type>(blob),
 
-#define USER_CONSTRUCTOR(...)  type.user_constructor = loupe::detail::make_user_constructor<reflected_type, __VA_ARGS__>();
+#define USER_CONSTRUCTOR(...) ; type.user_constructor = loupe::detail::make_user_constructor<reflected_type, __VA_ARGS__>();
 
 #define MEMBERS                                                                            \
 	; std::vector<loupe::member>& members = std::get<loupe::structure>(type.data).members; \
