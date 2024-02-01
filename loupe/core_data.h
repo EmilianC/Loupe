@@ -95,6 +95,11 @@ namespace loupe
 		std::string_view name;
 		std::size_t offset;
 		const property* data = nullptr;
+
+		// Helper function to retrieve the pointer to a member from the owning object.
+		// It is the user's responsibility to ensure the requested type matches the property's signature.
+		template<typename To> [[nodiscard]]
+		To* offset_from(void* location) const;
 	};
 
 	//

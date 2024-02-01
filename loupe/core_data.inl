@@ -76,6 +76,17 @@ namespace loupe
 		return false;
 	}
 
+	template<typename To> [[nodiscard]]
+	To* member::offset_from(void* location) const
+	{
+		static_assert(!std::is_const_v<To>, "Requested target type cannot be const.");
+		static_assert(!std::is_volatile_v<To>, "Requested target type cannot be volatile.");
+
+		LOUPE_ASSERT(get_type_name<To>() == data->signature, "Requested target type does not match the property's signature.");
+
+		return reinterpret_cast<To*>(static_cast<std::byte*>(location) + offset);
+	}
+
 	template<typename... Visitors>
 	auto type::visit(Visitors&&... visitors) const
 	{
