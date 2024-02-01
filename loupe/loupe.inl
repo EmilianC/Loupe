@@ -42,7 +42,7 @@ namespace loupe::detail
 	template<typename Type>
 	void register_property(reflection_blob& blob, std::vector<property>& properties)
 	{
-		property* property = find_or_add_property(properties, detail::get_type_name<Type>());
+		property* property = find_or_add_property(properties, get_type_name<std::remove_cv_t<Type>>());
 
 		if constexpr (adapters::pointer_adapter<Type>::value)
 		{
@@ -63,7 +63,7 @@ namespace loupe::detail
 		else if constexpr (adapters::variant_adapter<Type>::value)
 		{
 			auto register_variant_properties = [&]<typename... Alternatives>([[maybe_unused]] std::tuple<Alternatives...>*) {
-				( find_or_add_property(properties, detail::get_type_name<Alternatives>()), ... );
+				( find_or_add_property(properties, get_type_name<std::remove_cv_t<Alternatives>>()), ... );
 			};
 
 			typename adapters::variant_adapter<Type>::Tuple* tag = nullptr;
