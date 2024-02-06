@@ -87,6 +87,20 @@ namespace loupe
 		return reinterpret_cast<To*>(static_cast<std::byte*>(location) + offset);
 	}
 
+	template<typename Functor>
+	void structure::for_each_member(Functor&& func) const
+	{
+		for (const type* base : bases)
+		{
+			std::get<structure>(base->data).for_each_member(func);
+		}
+
+		for (const member& member : members)
+		{
+			func(member);
+		}
+	}
+
 	template<typename... Visitors>
 	auto type::visit(Visitors&&... visitors) const
 	{

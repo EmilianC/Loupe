@@ -111,6 +111,10 @@ namespace loupe
 		std::vector<member> members;
 		std::vector<const type*> bases;
 
+		// Iterates over all members, including any from inherited bases.
+		template<typename Functor>
+		void for_each_member(Functor&& func) const;
+
 		[[nodiscard]] bool is_derived_from(const type&) const;
 
 		[[nodiscard]] const member* find_member(std::string_view var_name) const;
