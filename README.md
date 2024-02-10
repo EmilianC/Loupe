@@ -11,6 +11,7 @@ The core Loupe API does not require Run-Time Type Information (RTTI) or Exceptio
 - [ ] Diff between blobs to detect and reconcile changes
 - [x] Support for standard containers (vector, array, map, set, etc.)
 - [x] Support for user defined containers
+- [x] Reflecting getters + setters
 - [ ] Serialization ready (bring your own archiver)
 - [x] User-defined metadata attributes
 

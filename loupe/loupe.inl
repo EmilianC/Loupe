@@ -163,18 +163,20 @@ namespace loupe::detail
 		static_assert(sizeof...(Args) > 0, "Use \"default_construct_at\" instead of user constructors if no arguments are required.");
 		static_assert(std::is_class_v<Type>, "User Constructors are only supported on structure/class types.");
 
-		return +[](void* location, Args&&...args) {
+		return +[](void* location, Args&&... args) {
 			new (location) Type(std::forward<Args>(args)...);
 		};
 	}
 
 	template<typename Type, typename... Tags>
-	member create_member(const reflection_blob& blob, std::string_view name, std::size_t offset)
+	member create_member(const reflection_blob& blob, std::string_view name, std::size_t offset, void* getter, void* setter)
 	{
 		member member {
 			.name = name,
 			.offset = offset,
-			.data = blob.find_property<Type>()
+			.data = blob.find_property<Type>(),
+			.getter = getter,
+			.setter = setter
 		};
 
 		if constexpr (sizeof...(Tags) > 0)

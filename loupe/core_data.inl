@@ -77,14 +77,51 @@ namespace loupe
 	}
 
 	template<typename To> [[nodiscard]]
-	To* member::offset_from(void* location) const
+	To* member::offset_from(void* base_struct_pointer) const
 	{
 		static_assert(!std::is_const_v<To>, "Requested target type cannot be const.");
 		static_assert(!std::is_volatile_v<To>, "Requested target type cannot be volatile.");
 
+		LOUPE_ASSERT(base_struct_pointer, "Base pointer cannot be null.");
 		LOUPE_ASSERT(get_type_name<To>() == data->signature, "Requested target type does not match the property's signature.");
 
-		return reinterpret_cast<To*>(static_cast<std::byte*>(location) + offset);
+		return reinterpret_cast<To*>(static_cast<std::byte*>(base_struct_pointer) + offset);
+	}
+
+	template<typename To> [[nodiscard]]
+	To member::get_copy_from(void* base_struct_pointer) const
+	{
+		LOUPE_ASSERT(base_struct_pointer, "Base pointer cannot be null.");
+
+		To result;
+		if (getter)
+		{
+			auto* func = static_cast<To (*)(void*)>(getter);
+			result = func(base_struct_pointer);
+		}
+		else
+		{
+			result = *offset_from<To>(base_struct_pointer);
+		}
+
+		return result;
+	}
+
+	template<typename From>
+	void member::set_on(void* base_struct_pointer, From value) const
+	{
+		LOUPE_ASSERT(base_struct_pointer, "Base pointer cannot be null.");
+
+		if (setter)
+		{
+			auto* func = static_cast<void(*)(void*, From)>(setter);
+			func(base_struct_pointer, std::move(value));
+		}
+		else
+		{
+			From* ptr = offset_from<From>(base_struct_pointer);
+			*ptr = std::move(value);
+		}
 	}
 
 	template<typename Functor>
