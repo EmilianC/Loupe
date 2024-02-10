@@ -82,8 +82,7 @@ static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected."); 
 					auto func = getter;                                                                                            \
 					return (object->*func)();                                                                                      \
 				};                                                                                                                 \
-			}                                                                                                                      \
-			return nullptr;                                                                                                        \
+			} else return nullptr;                                                                                                 \
 		}(getter);                                                                                                                 \
                                                                                                                                    \
 		void* setter_func = []<typename Signature>(Signature) -> void* {                                                           \
@@ -94,8 +93,7 @@ static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected."); 
 					auto func = setter;                                                                                            \
 					(object->*func)(value);                                                                                        \
 				};                                                                                                                 \
-			}                                                                                                                      \
-			return nullptr;                                                                                                        \
+			} else return nullptr;                                                                                                 \
 		}(setter);                                                                                                                 \
 			                                                                                                                       \
 		members.push_back(loupe::detail::create_member<MemberType, __VA_ARGS__>(                                                   \
