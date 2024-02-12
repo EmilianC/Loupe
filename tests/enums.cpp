@@ -17,9 +17,6 @@ TEST_CASE("Reflection Tests - Enums")
 		REQUIRE(std::holds_alternative<loupe::enumeration>(descriptor->data));
 		const loupe::enumeration& data = std::get<loupe::enumeration>(descriptor->data);
 
-		CHECK(data.underlying_type);
-		CHECK(data.underlying_type == ref.find<short>());
-
 		REQUIRE(data.entries.size() == 3);
 		CHECK(data.entries[0].name == "local_space");
 		CHECK(data.entries[0].value == 0);
@@ -59,9 +56,6 @@ TEST_CASE("Reflection Tests - Enums")
 		REQUIRE(std::holds_alternative<loupe::enumeration>(descriptor->data));
 		const loupe::enumeration& data = std::get<loupe::enumeration>(descriptor->data);
 
-		CHECK(data.underlying_type);
-		CHECK(data.underlying_type == ref.find<short>());
-
 		REQUIRE(data.entries.size() == 3);
 		CHECK(data.entries[0].name == "local_space");
 		CHECK(data.entries[0].value == 0);
@@ -100,9 +94,6 @@ TEST_CASE("Reflection Tests - Enums")
 
 		REQUIRE(std::holds_alternative<loupe::enumeration>(descriptor->data));
 		const loupe::enumeration& data = std::get<loupe::enumeration>(descriptor->data);
-
-		CHECK(data.underlying_type);
-		CHECK(data.underlying_type == ref.find<int>());
 
 		REQUIRE(data.entries.size() == 11);
 		CHECK(data.entries[0].name == "value0");
@@ -198,9 +189,6 @@ TEST_CASE("Reflection Tests - Enums")
 
 		REQUIRE(std::holds_alternative<loupe::enumeration>(descriptor->data));
 		const loupe::enumeration& data = std::get<loupe::enumeration>(descriptor->data);
-
-		CHECK(data.underlying_type);
-		CHECK(data.underlying_type == ref.find<int>());
 
 		REQUIRE(data.entries.size() == 11);
 		CHECK(data.entries[0].name == "value0");

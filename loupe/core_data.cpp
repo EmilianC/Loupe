@@ -83,7 +83,7 @@ namespace loupe
 		return false;
 	}
 
-	const std::size_t* enumeration::find_value(std::string_view value_name) const
+	const uint16_t* enumeration::find_value(std::string_view value_name) const
 	{
 		for (const enum_entry& entry : entries)
 		{
@@ -96,7 +96,7 @@ namespace loupe
 		return nullptr;
 	}
 
-	const std::string_view* enumeration::find_name(std::size_t value) const
+	const std::string_view* enumeration::find_name(uint16_t value) const
 	{
 		for (const enum_entry& entry : entries)
 		{
@@ -200,7 +200,6 @@ REFLECT(loupe::structure) MEMBERS {
 } REF_END;
 
 REFLECT(loupe::enumeration) MEMBERS {
-	REF_MEMBER(underlying_type)
 	REF_MEMBER(entries)
 } REF_END;
 

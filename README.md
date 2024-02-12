@@ -30,7 +30,7 @@ The core Loupe API does not require Run-Time Type Information (RTTI) or Exceptio
 //-- data.h --//
 struct hidden {};
 
-enum class small_enum
+enum class small_enum : uint16_t
 {
 	value0,
 	value1,

@@ -116,14 +116,14 @@ namespace loupe::detail
 					};
 				}
 			}
-			else if constexpr (std::is_enum_v<reflected_type>)
+			else if constexpr (std::is_enum_v<reflected_type> && !std::is_same_v<reflected_type, std::byte>)
 			{
+				static_assert(std::is_same_v<std::underlying_type_t<reflected_type>, uint16_t>, "Reflected enumerations must be of uint16_t type.");
 				type.data = loupe::enumeration {
-					.underlying_type = blob.find<std::underlying_type_t<reflected_type>>(),
 					.strongly_typed = std::is_scoped_enum_v<reflected_type>
 				};
 			}
-			else if constexpr (std::is_fundamental_v<reflected_type>)
+			else if constexpr (std::is_fundamental_v<reflected_type> || std::is_same_v<reflected_type, std::byte>)
 			{
 				type.data = loupe::fundamental{};
 			}
@@ -135,7 +135,7 @@ namespace loupe::detail
 	}
 
 	template<typename... Tags>
-	enum_entry create_enum_entry(const reflection_blob& blob, std::string_view name, std::size_t value)
+	enum_entry create_enum_entry(const reflection_blob& blob, std::string_view name, uint16_t value)
 	{
 		enum_entry entry {
 			.name = name,

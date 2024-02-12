@@ -11,14 +11,14 @@
 struct hidden {};
 struct editor_only {};
 
-enum class small_enum : short
+enum class small_enum : std::uint16_t
 {
 	local_space = 0,
 	world_space = 1,
 	COUNT
 };
 
-enum class large_enum : int
+enum class large_enum : std::uint16_t
 {
 	value0,
 	value1,
@@ -55,14 +55,14 @@ struct mat3
 
 namespace nested
 {
-	enum class small_enum : short
+	enum class small_enum : std::uint16_t
 	{
 		local_space = 0,
 		world_space = 1,
 		COUNT
 	};
 
-	enum class large_enum : int
+	enum class large_enum : std::uint16_t
 	{
 		value0,
 		value1,
