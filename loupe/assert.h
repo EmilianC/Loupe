@@ -4,6 +4,7 @@
 
 #include <cassert>
 #define LOUPE_ASSERT(exp, msg) do { assert((exp) && msg); } while(false)
+#define LOUPE_ASSERTS_ENABLED
 
 #else
 
