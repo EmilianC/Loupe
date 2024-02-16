@@ -46,6 +46,9 @@ namespace loupe
 
 			return result;
 		}
+
+		template<typename T>
+		struct always_false : public std::false_type {};
 	}
 
 	// Returns a string representation of the given type's name.
@@ -60,6 +63,72 @@ namespace loupe
 	auto property::visit(Visitors&&... visitors) const
 	{
 		return std::visit(detail::overload{ std::forward<Visitors>(visitors)... }, data);
+	}
+
+	template<typename Data> [[nodiscard]]
+	const Data& property::get_as() const
+	{
+		auto* result = try_as<Data>();
+		LOUPE_ASSERT(result, "The property's data type was not the expected value.");
+
+		return result;
+	}
+
+	template<typename Data> [[nodiscard]]
+	const Data* property::try_as() const
+	{
+		if constexpr (std::is_same_v<Data, pointer>)
+		{
+			return std::get_if<pointer>(&data);
+		}
+		else if constexpr (std::is_same_v<Data, array>)
+		{
+			return std::get_if<array>(&data);
+		}
+		else if constexpr (std::is_same_v<Data, map>)
+		{
+			return std::get_if<map>(&data);
+		}
+		else if constexpr (std::is_same_v<Data, variant>)
+		{
+			return std::get_if<variant>(&data);
+		}
+		else if constexpr (std::is_same_v<Data, type>)
+		{
+			const auto* result = std::get_if<const type*>(&data);
+			return result ? *result : nullptr;
+		}
+		else if constexpr (std::is_same_v<Data, fundamental>)
+		{
+			if (const auto* result = std::get_if<const type*>(&data))
+			{
+				return std::get_if<fundamental>(&(*result)->data);
+			}
+
+			return nullptr;
+		}
+		else if constexpr (std::is_same_v<Data, structure>)
+		{
+			if (const auto* result = std::get_if<const type*>(&data))
+			{
+				return std::get_if<structure>(&(*result)->data);
+			}
+
+			return nullptr;
+		}
+		else if constexpr (std::is_same_v<Data, enumeration>)
+		{
+			if (const auto* result = std::get_if<const type*>(&data))
+			{
+				return std::get_if<enumeration>(&(*result)->data);
+			}
+
+			return nullptr;
+		}
+		else
+		{
+			static_assert(detail::always_false<Data>::value, "Unsupported data category.");
+		}
 	}
 
 	template<typename Tag> [[nodiscard]]

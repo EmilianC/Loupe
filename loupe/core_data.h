@@ -67,8 +67,19 @@ namespace loupe
 		std::string_view signature;
 		std::variant<const type*, pointer, array, map, variant> data;
 
+		// Visitor pattern convenience function for the possible variants of data.
 		template<typename... Visitors>
 		auto visit(Visitors&&... visitors) const;
+
+		// Returns the property's data casted to the correct variant type. Asserts if not possible.
+		// "fundamental", "structure", and "enumeration" are also valid template options.
+		template<typename Data> [[nodiscard]]
+		const Data& get_as() const;
+
+		// Returns the property's data casted to the correct variant type, if possible.
+		// "fundamental", "structure", and "enumeration" are also valid template options.
+		template<typename Data> [[nodiscard]]
+		const Data* try_as() const;
 
 		[[nodiscard]] bool operator==(const property& other) const;
 		[[nodiscard]] bool operator!=(const property& other) const;
