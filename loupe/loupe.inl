@@ -29,59 +29,82 @@ namespace loupe::detail
 		[[no_unique_address]] Functor functor;
 	};
 
-	struct task
+	struct property_task
+	{
+		std::string_view signature;
+		void (*initialize_property)(const reflection_blob&, property&) = nullptr;
+	};
+
+	struct type_task
 	{
 		std::string_view name;
 		void (*initialize_type)(const reflection_blob&, type&) = nullptr;
-		void (*initialize_data)(reflection_blob&, std::vector<property>&, type&, task_data_stage) = nullptr;
+		void (*initialize_data)(reflection_blob&, std::vector<property>&, std::vector<property_task>&, type&, task_data_stage) = nullptr;
 	};
 
-	std::vector<task>& get_tasks();
-	property* find_or_add_property(std::vector<property>& properties, std::string_view signature);
+	std::vector<type_task>& get_tasks();
+	property* add_property(std::vector<property>& properties, std::string_view signature);
 
 	template<typename Type>
-	void register_property(reflection_blob& blob, std::vector<property>& properties)
+	void scan_properties(reflection_blob& blob, std::vector<property>& properties, std::vector<property_task>& property_tasks)
 	{
-		property* property = find_or_add_property(properties, get_type_name<std::remove_cv_t<Type>>());
+		const std::string_view property_signature = get_type_name<std::remove_cv_t<Type>>();
+		if (blob.find_property(property_signature))
+			return;
 
+		add_property(properties, property_signature);
+
+		void (*property_func)(const reflection_blob&, property&) = nullptr;
 		if constexpr (adapters::pointer_adapter<Type>::value)
 		{
-			register_property<typename adapters::pointer_adapter<Type>::TargetType>(blob, properties);
-			property->data = adapters::pointer_adapter<Type>::make_data(blob);
+			scan_properties<typename adapters::pointer_adapter<Type>::TargetType>(blob, properties, property_tasks);
+
+			property_func = +[](const reflection_blob& blob, property& prop) {
+				prop.data = adapters::pointer_adapter<Type>::make_data(blob);
+			};
 		}
 		else if constexpr (adapters::array_adapter<Type>::value)
 		{
-			register_property<typename adapters::array_adapter<Type>::ElementType>(blob, properties);
-			property->data = adapters::array_adapter<Type>::make_data(blob);
+			scan_properties<typename adapters::array_adapter<Type>::ElementType>(blob, properties, property_tasks);
+
+			property_func = +[](const reflection_blob& blob, property& prop) {
+				prop.data = adapters::array_adapter<Type>::make_data(blob);
+			};
 		}
 		else if constexpr (adapters::map_adapter<Type>::value)
 		{
-			register_property<typename adapters::map_adapter<Type>::KeyType>(blob, properties);
-			register_property<typename adapters::map_adapter<Type>::ValueType>(blob, properties);
-			property->data = adapters::map_adapter<Type>::make_data(blob);
+			scan_properties<typename adapters::map_adapter<Type>::KeyType>(blob, properties, property_tasks);
+			scan_properties<typename adapters::map_adapter<Type>::ValueType>(blob, properties, property_tasks);
+
+			property_func = +[](const reflection_blob& blob, property& prop) {
+				prop.data = adapters::map_adapter<Type>::make_data(blob);
+			};
 		}
 		else if constexpr (adapters::variant_adapter<Type>::value)
 		{
-			auto register_variant_properties = [&]<typename... Alternatives>([[maybe_unused]] std::tuple<Alternatives...>*) {
-				( find_or_add_property(properties, get_type_name<std::remove_cv_t<Alternatives>>()), ... );
+			auto scan_variant_properties = [&]<typename... Alternatives>([[maybe_unused]] std::tuple<Alternatives...>*) {
+				( scan_properties<std::remove_cv_t<Alternatives>>(blob, properties, property_tasks), ... );
 			};
 
 			typename adapters::variant_adapter<Type>::Tuple* tag = nullptr;
-			register_variant_properties(tag);
+			scan_variant_properties(tag);
 
-			property->data = adapters::variant_adapter<Type>::make_data(blob);
-		}
-		else if constexpr (std::is_class_v<Type> || std::is_enum_v<Type> || std::is_fundamental_v<Type>)
-		{
-			const type* type = blob.find<Type>();
-			LOUPE_ASSERT(type, "A type required by a property was not registered");
-
-			property->data = type;
+			property_func = +[](const reflection_blob& blob, property& prop) {
+				prop.data = adapters::variant_adapter<Type>::make_data(blob);
+			};
 		}
 		else
 		{
-			LOUPE_ASSERT(false, "Unsupported type category");
+			static_assert(std::is_class_v<Type> || std::is_enum_v<Type> || std::is_fundamental_v<Type>, "Unsupported type category.");
+			property_func = +[](const reflection_blob& blob, property& prop) {
+				const type* type = blob.find<Type>();
+				LOUPE_ASSERT(type, "A type required by a property was not registered.");
+
+				prop.data = type;
+			};
 		}
+
+		property_tasks.emplace_back(property_signature, property_func);
 	}
 
 	template<typename reflected_type>

@@ -43,7 +43,7 @@ REF_END;
 	const std::size_t offset = Inspector::offset;                                                                                  \
 	if (stage == loupe::detail::task_data_stage::scan_properties)                                                                  \
 	{                                                                                                                              \
-		loupe::detail::register_property<MemberType>(blob, properties);                                                            \
+		loupe::detail::scan_properties<MemberType>(blob, properties, property_tasks);                                              \
 	}                                                                                                                              \
 	else if (stage == loupe::detail::task_data_stage::members)                                                                     \
 	{                                                                                                                              \

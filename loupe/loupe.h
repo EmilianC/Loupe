@@ -33,15 +33,15 @@ static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected."); 
 [[maybe_unused]] static const auto& LOUPE_ANONYMOUS_VARIABLE(LOUPE_DUMMY_) =                                                                                                        \
 	loupe::detail::get_tasks().emplace_back(loupe::get_type_name<type_name>(), &loupe::detail::init_type_data<std::remove_cv_t<type_name>>, nullptr);
 
-#define REFLECT(type_name)                                                                                                                                                          \
-static_assert(std::is_class_v<type_name> || std::is_enum_v<type_name> || std::is_fundamental_v<type_name>, "Only structs/classes, enums, and fundamental types can be reflected."); \
-static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected.");                                                                                                     \
-[[maybe_unused]] static const auto& LOUPE_ANONYMOUS_VARIABLE(LOUPE_DUMMY_) =                                                                                                        \
-	loupe::detail::get_tasks().emplace_back(                                                                                                                                        \
-		loupe::get_type_name<type_name>(),                                                                                                                                          \
-		&loupe::detail::init_type_data<std::remove_cv_t<type_name>>,                                                                                                                \
-		[](loupe::reflection_blob& blob, std::vector<loupe::property>& properties, loupe::type& type, loupe::detail::task_data_stage stage)                                         \
-		{                                                                                                                                                                           \
+#define REFLECT(type_name)                                                                                                                                                                             \
+static_assert(std::is_class_v<type_name> || std::is_enum_v<type_name> || std::is_fundamental_v<type_name>, "Only structs/classes, enums, and fundamental types can be reflected.");                    \
+static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected.");                                                                                                                        \
+[[maybe_unused]] static const auto& LOUPE_ANONYMOUS_VARIABLE(LOUPE_DUMMY_) =                                                                                                                           \
+	loupe::detail::get_tasks().emplace_back(                                                                                                                                                           \
+		loupe::get_type_name<type_name>(),                                                                                                                                                             \
+		&loupe::detail::init_type_data<std::remove_cv_t<type_name>>,                                                                                                                                   \
+		[](loupe::reflection_blob& blob, std::vector<loupe::property>& properties, std::vector<loupe::detail::property_task>& property_tasks, loupe::type& type, loupe::detail::task_data_stage stage) \
+		{                                                                                                                                                                                              \
 			using reflected_type = std::remove_cv_t<type_name>;
 
 #define ENUM_VALUES           if (stage == loupe::detail::task_data_stage::enums) std::get<loupe::enumeration>(type.data).entries =
@@ -63,7 +63,7 @@ static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected."); 
 	using MemberType = decltype(reflected_type::member);                                                                           \
 	if (stage == loupe::detail::task_data_stage::scan_properties)                                                                  \
 	{                                                                                                                              \
-		loupe::detail::register_property<MemberType>(blob, properties);                                                            \
+		loupe::detail::scan_properties<MemberType>(blob, properties, property_tasks);                                              \
 	}                                                                                                                              \
 	else if (stage == loupe::detail::task_data_stage::members)                                                                     \
 	{                                                                                                                              \

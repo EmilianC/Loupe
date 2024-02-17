@@ -7,10 +7,10 @@ namespace loupe
 {
 	namespace detail
 	{
-		std::vector<task>& get_tasks()
+		std::vector<type_task>& get_tasks()
 		{
-			static std::vector<task> tasks = []() {
-				std::vector<task> storage;
+			static std::vector<type_task> tasks = []() {
+				std::vector<type_task> storage;
 				storage.reserve(256);
 				return storage;
 			}();
@@ -18,23 +18,15 @@ namespace loupe
 			return tasks;
 		}
 
-		property* find_or_add_property(std::vector<property>& properties, std::string_view signature)
+		property* add_property(std::vector<property>& properties, std::string_view signature)
 		{
-			auto itr = std::lower_bound(properties.begin(), properties.end(), signature, [](const property& prop, std::string_view signature) {
+			auto itr = std::lower_bound(properties.begin(), properties.end(), signature, [](const property& prop, const std::string_view& signature) {
 				return prop.signature < signature;
 			});
 
-			if (itr == properties.end())
-			{
-				properties.push_back({ signature });
-				return &properties.back();
-			}
+			LOUPE_ASSERT(itr == properties.end() || itr->signature != signature, "The property has already added. There is a flow error.");
 
-			if (itr->signature != signature)
-			{
-				itr = properties.insert(itr, { signature });
-			}
-
+			itr = properties.insert(itr, { signature });
 			return &(*itr);
 		}
 	}
@@ -49,41 +41,56 @@ namespace loupe
 		auto& tasks = detail::get_tasks();
 		// The final array of types needs to be sorted to allow for faster lookups.
 		// It is easier to just sort the tasks by name from the start.
-		std::sort(tasks.begin(), tasks.end(), [](const detail::task& left, const detail::task& right) {
+		std::sort(tasks.begin(), tasks.end(), [](const detail::type_task& left, const detail::type_task& right) {
 			return left.name < right.name;
 		});
 
 #ifdef LOUPE_ASSERTS_ENABLED
 		// check for duplicate tasks.
-		auto itr = std::adjacent_find(tasks.begin(), tasks.end(), [](const detail::task& left, const detail::task& right) {
+		auto itr = std::adjacent_find(tasks.begin(), tasks.end(), [](const detail::type_task& left, const detail::type_task& right) {
 			return left.name == right.name;
 		});
 		LOUPE_ASSERT(itr == tasks.end(), "A type has been reflected multiple times.");
 #endif
 
 		blob.types.resize(tasks.size());
-		for (unsigned i = 0; const detail::task& task : tasks)
+		for (unsigned i = 0; const detail::type_task& task : tasks)
 		{
 			blob.types[i++].name = task.name;
 		}
 
-		for (unsigned i = 0; const detail::task& task : tasks)
+		for (unsigned i = 0; const detail::type_task& task : tasks)
 		{
 			task.initialize_type(blob, blob.types[i++]);
 		}
 
+		std::vector<detail::property_task> property_tasks;
+		property_tasks.reserve(64);
+
 		auto process_data_stage = [&](detail::task_data_stage stage) {
-			for (unsigned i = 0; const detail::task& task : tasks)
+			for (unsigned i = 0; const detail::type_task& task : tasks)
 			{
 				if (task.initialize_data)
 				{
-					task.initialize_data(blob, blob.properties, blob.types[i], stage);
+					task.initialize_data(blob, blob.properties, property_tasks, blob.types[i], stage);
 				}
 				++i;
 			}
 		};
 
 		process_data_stage(detail::task_data_stage::scan_properties);
+		blob.properties.shrink_to_fit();
+
+		// Sorting to ensure the indices of the tasks will match up to the properties in the blob.
+		std::sort(property_tasks.begin(), property_tasks.end(), [](const detail::property_task& left, const detail::property_task& right) {
+			return left.signature < right.signature;
+		});
+
+		for (unsigned i = 0; const detail::property_task& task : property_tasks)
+		{
+			task.initialize_property(blob, blob.properties[i++]);
+		}
+
 		process_data_stage(detail::task_data_stage::enums);
 		process_data_stage(detail::task_data_stage::bases);
 		process_data_stage(detail::task_data_stage::members);
