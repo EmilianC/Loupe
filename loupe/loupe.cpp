@@ -53,7 +53,7 @@ namespace loupe
 			return left.name < right.name;
 		});
 
-#if _DEBUG
+#ifdef LOUPE_ASSERTS_ENABLED
 		// check for duplicate tasks.
 		auto itr = std::adjacent_find(tasks.begin(), tasks.end(), [](const detail::task& left, const detail::task& right) {
 			return left.name == right.name;
