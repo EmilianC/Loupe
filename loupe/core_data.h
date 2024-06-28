@@ -213,6 +213,11 @@ namespace loupe
 		PRIVATE_MEMBER(reflection_blob, types);
 		PRIVATE_MEMBER(reflection_blob, properties);
 	};
+
+	// Finds the lowest common base between two types.
+	// This function is most meaningful for structure types, otherwise it is an equality check.
+	// Both provided structure types must have strictly linear hierarchies.
+	[[nodiscard]] const type* find_common_ancestor(const type&, const type&);
 }
 
 #include "core_data.inl"

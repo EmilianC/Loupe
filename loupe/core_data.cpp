@@ -151,6 +151,74 @@ namespace loupe
 	{
 		return properties;
 	}
+
+	const type* find_common_ancestor(const type& left, const type& right)
+	{
+		if (&left == &right)
+			return &left;
+
+		auto* left_struct  = std::get_if<structure>(&left.data);
+		auto* right_struct = std::get_if<structure>(&right.data);
+
+		if (!left_struct || !right_struct)
+			return nullptr;
+
+		auto get_base = [](const type& child) -> const type* {
+			auto& structure = std::get<loupe::structure>(child.data);
+
+			if (structure.bases.empty())
+				return nullptr;
+
+			LOUPE_ASSERT(structure.bases.size() == 1, "");
+			return structure.bases[0];
+		};
+
+		auto count_depth = [&](const type& node) -> int {
+			const type* current_node = &node;
+			int count = -1;
+
+			do
+			{
+				++count;
+				current_node = get_base(*current_node);
+			} while (current_node);
+
+			return count;
+		};
+
+		int left_depth  = count_depth(left);
+		int right_depth = count_depth(right);
+
+		const type* current_left_node  = &left;
+		const type* current_right_node = &right;
+
+		// Match the depths we are checking at first.
+		while (left_depth > right_depth)
+		{
+			current_left_node = get_base(*current_left_node);
+			--left_depth;
+		}
+
+		while (right_depth > left_depth)
+		{
+			current_right_node = get_base(*current_right_node);
+			--right_depth;
+		}
+
+		// With depths equal, we can start checking where the paths converge.
+		int current_depth = left_depth;
+		while (current_depth >= 0)
+		{
+			if (current_left_node == current_right_node)
+				return current_left_node;
+
+			current_left_node = get_base(*current_left_node);
+			current_right_node = get_base(*current_right_node);
+			--current_depth;
+		}
+
+		return nullptr;
+	}
 }
 
 /// Fundamental types ///
