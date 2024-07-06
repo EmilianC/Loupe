@@ -14,6 +14,7 @@ The core Loupe API does not require Run-Time Type Information (RTTI) or Exceptio
 - [x] Reflecting getters + setters
 - [ ] Serialization ready (bring your own archiver)
 - [x] User-defined metadata attributes
+- [x] Stateful metadata (such as a range bound on members)
 
 # Post 1.0 Features
 - Reflecting and invoking functions
@@ -22,14 +23,11 @@ The core Loupe API does not require Run-Time Type Information (RTTI) or Exceptio
 - Support beyond the Windows platform
 - Debugger .natvis files
 - Support for custom allocators
-- Stateful Metadata (such as a range bound for floats)
 
 # Quick Usage
 
 ```cpp
 //-- data.h --//
-struct hidden {};
-
 enum class small_enum : uint16_t
 {
 	value0,
@@ -48,30 +46,31 @@ struct vec4
 
 //-- data.cpp --//
 #include "loupe.h"
-
-// Metadata tags must also be reflected.
-REFLECT_SIMPLE(hidden);
+#include "loupe/metadata.h"
 
 REFLECT(small_enum) ENUM_VALUES {
-	REF_VALUE(value0)
+	REF_VALUE(value0, description("A value of zero."))
 	REF_VALUE(value1)
-	REF_VALUE(COUNT, hidden)
+	REF_VALUE(COUNT, hidden())
 } REF_END;
 
 REFLECT(vec4) MEMBERS {
 	REF_MEMBER(x)
 	REF_MEMBER(y)
 	REF_MEMBER(z)
-	REF_MEMBER(w, hidden)
+	REF_MEMBER(w, readonly(), hidden())
 } REF_END;
 
 
 //-- main.cpp --//
 #include "data.h"
 #include "loupe.h"
+#include "loupe/metadata.h"
 
 int main()
 {
+	using namespace loupe::metadata;
+
 	loupe::reflection_blob blob = loupe::reflect();
 	// Reclaim a little memory if you don't plan on calling reflect() again.
 	loupe::clear_reflect_tasks();
@@ -83,7 +82,7 @@ int main()
 	{
 		print(entry.name);                   // "value0", "value1", "COUNT"
 		print(entry.value);                  //  0,        1,        2
-		print(entry.has_metadata<hidden>()); // "false",  "false",  "true"
+		print(entry.metadata.has<hidden>()); // "false",  "false",  "true"
 	}
 
 	// Type lookup can also be done directly with known types.
@@ -93,12 +92,12 @@ int main()
 		[&](const loupe::fundamental& data) { /*...*/ },
 		[&](const loupe::structure& data) {
 			const loupe::property* float_property = blob.find_property<float>();
-			for (const loupe::member& member : data.members)
+			for (const loupe::member& m : data.members)
 			{
-				print(member.name);                   // "x",     "y",     "z",     "w"
-				print(member.offset);                 //  0,       4,       8,       12
-				print(member.data == float_property); // "true",  "true",  "true",  "true"
-				print(member.has_metadata<hidden>()); // "false", "false", "false", "true"
+				print(m.name);                   // "x",     "y",     "z",     "w"
+				print(m.offset);                 //  0,       4,       8,       12
+				print(m.data == float_property); // "true",  "true",  "true",  "true"
+				print(m.metadata.has<hidden>()); // "false", "false", "false", "true"
 			}
 		},
 		[&](const loupe::enumeration& data) { /*...*/ }

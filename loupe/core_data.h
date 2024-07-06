@@ -3,6 +3,7 @@
 #include "assert.h"
 #include "private_members.h"
 
+#include <any>
 #include <memory>
 #include <span>
 #include <string_view>
@@ -88,24 +89,22 @@ namespace loupe
 	struct metadata_container
 	{
 		template<typename Tag> [[nodiscard]]
-		bool has_metadata() const;
+		bool has() const;
 
-		std::vector<const type*> metadata;
+		template<typename Tag> [[nodiscard]]
+		const Tag* get() const;
+		
+		struct entry { const type* type; std::any value; };
+		std::vector<entry> entries;
 	};
 
 	//
-	struct enum_entry : public metadata_container
-	{
-		std::string_view name;
-		uint16_t value;
-	};
-
-	//
-	struct member : public metadata_container
+	struct member
 	{
 		std::string_view name;
 		std::size_t offset;
 		const property* data = nullptr;
+		metadata_container metadata;
 
 		// Helper function to retrieve the pointer to a member from the owning object.
 		// It is the user's responsibility to ensure the requested type matches the property's signature.
@@ -139,8 +138,16 @@ namespace loupe
 
 		[[nodiscard]] bool is_derived_from(const type&) const;
 
-		[[nodiscard]] const member* find_member(std::string_view var_name) const;
+		[[nodiscard]] const member* find_member(std::string_view name) const;
 		[[nodiscard]] const member* find_member(std::size_t offset) const;
+	};
+
+	//
+	struct enum_entry
+	{
+		std::string_view name;
+		uint16_t value;
+		metadata_container metadata;
 	};
 
 	//
@@ -149,8 +156,11 @@ namespace loupe
 		std::vector<enum_entry> entries;
 		bool strongly_typed = false;
 
-		[[nodiscard]] const uint16_t*         find_value(std::string_view value_name) const;
+		[[nodiscard]] const uint16_t*         find_value(std::string_view name) const;
 		[[nodiscard]] const std::string_view* find_name(uint16_t value) const;
+
+		[[nodiscard]] const enum_entry* find_entry(std::string_view name) const;
+		[[nodiscard]] const enum_entry* find_entry(uint16_t value) const;
 	};
 
 	//

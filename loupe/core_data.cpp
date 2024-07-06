@@ -1,6 +1,7 @@
 // Copyright (c) 2022 Emilian Cioca
 #include "core_data.h"
 #include "loupe.h"
+#include "metadata.h"
 
 namespace loupe
 {
@@ -28,11 +29,11 @@ namespace loupe
 		return false;
 	}
 
-	const member* structure::find_member(std::string_view var_name) const
+	const member* structure::find_member(std::string_view name) const
 	{
 		for (const member& member : members)
 		{
-			if (member.name == var_name)
+			if (member.name == name)
 			{
 				return &member;
 			}
@@ -40,7 +41,7 @@ namespace loupe
 
 		for (const type* base : bases)
 		{
-			if (const member* member = std::get<loupe::structure>(base->data).find_member(var_name))
+			if (const member* member = std::get<loupe::structure>(base->data).find_member(name))
 			{
 				return member;
 			}
@@ -83,26 +84,46 @@ namespace loupe
 		return false;
 	}
 
-	const uint16_t* enumeration::find_value(std::string_view value_name) const
+	const uint16_t* enumeration::find_value(std::string_view name) const
+	{
+		if (const enum_entry* entry = find_entry(name))
+		{
+			return &entry->value;
+		}
+
+		return nullptr; 
+	}
+
+	const std::string_view* enumeration::find_name(uint16_t value) const
+	{
+		if (const enum_entry* entry = find_entry(value))
+		{
+			return &entry->name;
+		}
+
+		return nullptr; 
+	}
+
+	const enum_entry* enumeration::find_entry(std::string_view name) const
 	{
 		for (const enum_entry& entry : entries)
 		{
-			if (entry.name == value_name)
+			if (entry.name == name)
 			{
-				return &entry.value;
+				return &entry;
 			}
 		}
 
 		return nullptr;
 	}
 
-	const std::string_view* enumeration::find_name(uint16_t value) const
+	const enum_entry* enumeration::find_entry(uint16_t value) const
 	{
 		for (const enum_entry& entry : entries)
 		{
 			if (entry.value == value)
 			{
-				return &entry.name;
+				return &entry;
 			}
 		}
 
@@ -249,6 +270,23 @@ REFLECT_SIMPLE(std::string);
 REFLECT_SIMPLE(std::string_view);
 
 /// Reflect our own types ///
+REFLECT_SIMPLE(loupe::metadata::hidden);
+REFLECT_SIMPLE(loupe::metadata::readonly);
+REFLECT_SIMPLE(loupe::metadata::not_serialized);
+REFLECT_SIMPLE(loupe::metadata::description);
+REFLECT_SIMPLE(loupe::metadata::display_name);
+REFLECT_SIMPLE(loupe::metadata::category);
+REFLECT_SIMPLE(loupe::metadata::previously_serialized_as);
+
+REFLECT_SIMPLE(loupe::metadata::range<short int>);
+REFLECT_SIMPLE(loupe::metadata::range<int>);
+REFLECT_SIMPLE(loupe::metadata::range<long int>);
+REFLECT_SIMPLE(loupe::metadata::range<unsigned short int>);
+REFLECT_SIMPLE(loupe::metadata::range<unsigned int>);
+REFLECT_SIMPLE(loupe::metadata::range<unsigned long int>);
+REFLECT_SIMPLE(loupe::metadata::range<float>);
+REFLECT_SIMPLE(loupe::metadata::range<double>);
+
 REFLECT(loupe::enum_entry) MEMBERS {
 	REF_MEMBER(name)
 	REF_MEMBER(value)
@@ -293,6 +331,14 @@ REFLECT(loupe::variant) MEMBERS {
 REFLECT(loupe::property) MEMBERS {
 	REF_MEMBER(signature)
 	REF_MEMBER(data)
+} REF_END;
+
+REFLECT(loupe::metadata_container::entry) MEMBERS {
+	REF_MEMBER(type)
+} REF_END;
+
+REFLECT(loupe::metadata_container) MEMBERS {
+	REF_MEMBER(entries)
 } REF_END;
 
 REFLECT_SIMPLE(loupe::fundamental);

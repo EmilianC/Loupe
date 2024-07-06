@@ -44,8 +44,8 @@ static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected."); 
 		{                                                                                                                                                                                              \
 			using reflected_type = std::remove_cv_t<type_name>;
 
-#define ENUM_VALUES           if (stage == loupe::detail::task_data_stage::enums) std::get<loupe::enumeration>(type.data).entries =
-#define REF_VALUE(value, ...) loupe::detail::create_enum_entry<__VA_ARGS__>(blob, #value, std::to_underlying(reflected_type::value)),
+#define ENUM_VALUES           using namespace loupe::metadata; if (stage == loupe::detail::task_data_stage::enums) std::get<loupe::enumeration>(type.data).entries =
+#define REF_VALUE(value, ...) loupe::detail::create_enum_entry(blob, #value, std::to_underlying(reflected_type::value), __VA_ARGS__),
 
 #define BASES                 if (stage == loupe::detail::task_data_stage::bases) std::get<loupe::structure>(type.data).bases =
 #define REF_BASE(base_type)   loupe::detail::find_base<base_type, reflected_type>(blob),
@@ -96,8 +96,9 @@ static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected."); 
 			} else return nullptr;                                                                                                 \
 		}(setter);                                                                                                                 \
 			                                                                                                                       \
-		members.push_back(loupe::detail::create_member<MemberType, __VA_ARGS__>(                                                   \
-			blob, #member, __builtin_offsetof(reflected_type, member), getter_func, setter_func)                                   \
+		using namespace loupe::metadata;                                                                                           \
+		members.push_back(loupe::detail::create_member<MemberType>(                                                                \
+			blob, #member, __builtin_offsetof(reflected_type, member), getter_func, setter_func, __VA_ARGS__)                      \
 		);                                                                                                                         \
 	}}
 

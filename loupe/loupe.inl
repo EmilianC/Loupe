@@ -158,24 +158,37 @@ namespace loupe::detail
 	}
 
 	template<typename... Tags>
-	enum_entry create_enum_entry(const reflection_blob& blob, std::string_view name, uint16_t value)
+	void add_metadata(const reflection_blob& blob, metadata_container& container, Tags&&... tags)
+	{
+		if constexpr (sizeof...(Tags) > 0)
+		{
+			container.entries.reserve(sizeof...(Tags));
+
+			([&] {
+				const type* tag_type = blob.find<Tags>();
+				LOUPE_ASSERT(tag_type, "Metadata tag was not registered. Metadata tags must also be reflected separately.");
+
+				if constexpr (std::is_empty_v<Tags>)
+				{
+					container.entries.push_back({ tag_type, {} });
+				}
+				else
+				{
+					container.entries.push_back({ tag_type, tags });
+				}
+			} (), ...);
+		}
+	}
+
+	template<typename... Tags>
+	enum_entry create_enum_entry(const reflection_blob& blob, std::string_view name, uint16_t value, Tags&&... tags)
 	{
 		enum_entry entry {
 			.name = name,
 			.value = value
 		};
 
-		if constexpr (sizeof...(Tags) > 0)
-		{
-			entry.metadata.reserve(sizeof...(Tags));
-
-			([&] {
-				const type* tag_type = blob.find<Tags>();
-				LOUPE_ASSERT(tag_type, "Metadata tag was not registered. Metadata tags must also be reflected separately.");
-
-				entry.metadata.push_back(tag_type);
-			} (), ...);
-		}
+		add_metadata(blob, entry.metadata, std::forward<Tags>(tags)...);
 
 		return entry;
 	}
@@ -192,7 +205,7 @@ namespace loupe::detail
 	}
 
 	template<typename Type, typename... Tags>
-	member create_member(const reflection_blob& blob, std::string_view name, std::size_t offset, void* getter, void* setter)
+	member create_member(const reflection_blob& blob, std::string_view name, std::size_t offset, void* getter, void* setter, Tags&&... tags)
 	{
 		member member {
 			.name = name,
@@ -202,17 +215,7 @@ namespace loupe::detail
 			.setter = setter
 		};
 
-		if constexpr (sizeof...(Tags) > 0)
-		{
-			member.metadata.reserve(sizeof...(Tags));
-
-			([&] {
-				const type* tag_type = blob.find<Tags>();
-				LOUPE_ASSERT(tag_type, "Metadata tag was not registered. Metadata tags must also be reflected separately.");
-
-				member.metadata.push_back(tag_type);
-			} (), ...);
-		}
+		add_metadata(blob, member.metadata, std::forward<Tags>(tags)...);
 
 		return member;
 	}

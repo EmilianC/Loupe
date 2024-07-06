@@ -1,5 +1,6 @@
 #include "test_data.h"
 #include "loupe/loupe.h"
+#include "loupe/metadata.h"
 #include "loupe/property_adapters.h"
 #include <array>
 
@@ -48,19 +49,16 @@ namespace loupe::adapters
 	};
 }
 
-REFLECT_SIMPLE(hidden);
-REFLECT_SIMPLE(editor_only);
-
 REFLECT(small_enum) ENUM_VALUES {
 	REF_VALUE(local_space)
 	REF_VALUE(world_space)
-	REF_VALUE(COUNT, hidden)
+	REF_VALUE(COUNT, hidden())
 } REF_END;
 
 REFLECT(nested::small_enum) ENUM_VALUES {
 	REF_VALUE(local_space)
 	REF_VALUE(world_space)
-	REF_VALUE(COUNT, hidden)
+	REF_VALUE(COUNT, hidden())
 } REF_END;
 
 REFLECT(large_enum) ENUM_VALUES {
@@ -74,7 +72,7 @@ REFLECT(large_enum) ENUM_VALUES {
 	REF_VALUE(value7)
 	REF_VALUE(value8)
 	REF_VALUE(value9)
-	REF_VALUE(COUNT, hidden)
+	REF_VALUE(COUNT, hidden())
 } REF_END;
 
 REFLECT(nested::large_enum) ENUM_VALUES {
@@ -88,7 +86,7 @@ REFLECT(nested::large_enum) ENUM_VALUES {
 	REF_VALUE(value7)
 	REF_VALUE(value8)
 	REF_VALUE(value9)
-	REF_VALUE(COUNT, hidden)
+	REF_VALUE(COUNT, hidden())
 } REF_END;
 
 REFLECT(nested::transform) MEMBERS {
@@ -114,7 +112,7 @@ REFLECT(quaternion) MEMBERS {
 	REF_MEMBER(x)
 	REF_MEMBER(y)
 	REF_MEMBER(z)
-	REF_MEMBER(w)
+	REF_MEMBER(w, hidden())
 } REF_END;
 
 REFLECT(vec3) MEMBERS {
@@ -132,8 +130,8 @@ REFLECT(game_object)
 		REF_BASE(nested::base_object)
 	}
 	MEMBERS {
-		REF_MEMBER(health)
-		REF_MEMBER(enabled, editor_only)
+		REF_MEMBER(health, range(0.0f, 100.0f))
+		REF_MEMBER(enabled)
 		REF_MEMBER(matrix)
 		REF_MEMBER(children)
 		REF_MEMBER(parent)

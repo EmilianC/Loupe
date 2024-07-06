@@ -76,7 +76,8 @@ REF_END;
 			} else return nullptr;                                                                                                 \
 		}(setter);                                                                                                                 \
 			                                                                                                                       \
-		members.push_back(loupe::detail::create_member<MemberType, __VA_ARGS__>(                                                   \
-			blob, #member, offset, getter_func, setter_func)                                                                       \
+		using namespace loupe::metadata;                                                                                           \
+		members.push_back(loupe::detail::create_member<MemberType>(                                                                \
+			blob, #member, offset, getter_func, setter_func, __VA_ARGS__)                                                          \
 		);                                                                                                                         \
 	}}

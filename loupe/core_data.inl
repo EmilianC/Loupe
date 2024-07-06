@@ -132,17 +132,33 @@ namespace loupe
 	}
 
 	template<typename Tag> [[nodiscard]]
-	bool metadata_container::has_metadata() const
+	bool metadata_container::has() const
 	{
-		for (const type* tag : metadata)
+		for (const entry& e : entries)
 		{
-			if (get_type_name<Tag>() == tag->name)
+			if (get_type_name<Tag>() == e.type->name)
 			{
 				return true;
 			}
 		}
 
 		return false;
+	}
+
+	template<typename Tag> [[nodiscard]]
+	const Tag* metadata_container::get() const
+	{
+		static_assert(!std::is_empty_v<Tag>, "Metadata tag type is empty and has no value to get, use 'has()' instead.");
+
+		for (const entry& e : entries)
+		{
+			if (get_type_name<Tag>() == e.type->name)
+			{
+				return std::any_cast<Tag>(&e.value);
+			}
+		}
+
+		return nullptr;
 	}
 
 	template<typename To> [[nodiscard]]

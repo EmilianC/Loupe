@@ -8,9 +8,6 @@
 #include <memory>
 #include <map>
 
-struct hidden {};
-struct editor_only {};
-
 enum class small_enum : std::uint16_t
 {
 	local_space = 0,
