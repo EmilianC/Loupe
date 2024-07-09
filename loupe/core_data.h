@@ -92,7 +92,7 @@ namespace loupe
 		bool has() const;
 
 		template<typename Tag> [[nodiscard]]
-		const Tag* get() const;
+		const Tag* find() const;
 		
 		struct entry { const type* type; std::any value; };
 		std::vector<entry> entries;

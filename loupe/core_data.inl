@@ -146,7 +146,7 @@ namespace loupe
 	}
 
 	template<typename Tag> [[nodiscard]]
-	const Tag* metadata_container::get() const
+	const Tag* metadata_container::find() const
 	{
 		static_assert(!std::is_empty_v<Tag>, "Metadata tag type is empty and has no value to get, use 'has()' instead.");
 
