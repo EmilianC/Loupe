@@ -26,6 +26,10 @@ namespace loupe::metadata
 			LOUPE_ASSERT(min <= max, "Invalid value range.");
 		};
 
+		[[nodiscard]] bool has_lower_bound() const { return min != std::numeric_limits<T>::min(); }
+		[[nodiscard]] bool has_upper_bound() const { return max != std::numeric_limits<T>::max(); }
+		[[nodiscard]] bool has_both_bounds() const { return has_lower_bound() && has_upper_bound(); }
+
 		T min = std::numeric_limits<T>::min();
 		T max = std::numeric_limits<T>::max();
 	};
