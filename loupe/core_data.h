@@ -108,7 +108,7 @@ namespace loupe
 
 		// Helper function to retrieve the pointer to a member from the owning object.
 		// It is the user's responsibility to ensure the requested type matches the property's signature.
-		template<typename To> [[nodiscard]]
+		template<typename To = void> [[nodiscard]]
 		To* offset_from(void* base_struct_pointer) const;
 
 		// Returns a direct copy of the member value, or the result of calling the reflected getter.
