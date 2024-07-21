@@ -106,7 +106,7 @@ int main()
 ```
 
 # Default Serialization Dependencies
-- [Cereal 1.3.2](https://github.com/USCiLab/cereal)
+- [Cereal 1.3.2](https://github.com/EmilianC/cereal/tree/fork-stable)
 
 # Test Project Dependencies
 - [Catch 2.13.9](https://github.com/catchorg/Catch2/tree/v2.x)
