@@ -3,6 +3,8 @@
 #include "loupe.h"
 #include "metadata.h"
 
+#include <string>
+
 namespace loupe
 {
 	bool property::operator==(const property& other) const
