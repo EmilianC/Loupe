@@ -42,14 +42,15 @@ struct vec4
 	float z = 0.0f;
 	float w = 1.0f;
 };
-
-
+```
+```cpp
 //-- data.cpp --//
+#include "data.h"
 #include "loupe.h"
 #include "loupe/metadata.h"
 
 REFLECT(small_enum) ENUM_VALUES {
-	REF_VALUE(value0, description("A value of zero."))
+	REF_VALUE(value0, description("A value"))
 	REF_VALUE(value1)
 	REF_VALUE(COUNT, hidden())
 } REF_END;
@@ -60,8 +61,8 @@ REFLECT(vec4) MEMBERS {
 	REF_MEMBER(z)
 	REF_MEMBER(w, readonly(), hidden())
 } REF_END;
-
-
+```
+```cpp
 //-- main.cpp --//
 #include "data.h"
 #include "loupe.h"
@@ -75,21 +76,33 @@ int main()
 	// Reclaim a little memory if you don't plan on calling reflect() again.
 	loupe::clear_reflect_tasks();
 
-	const loupe::type* descriptor = blob.find("small_enum");
-	// Direct type category access.
-	const loupe::enumeration& data = std::get<loupe::enumeration>(descriptor->data);
-	for (const loupe::enum_entry& entry : data.entires)
+	// Type lookup can be fully dynamic,
+	const loupe::type* enum_type = blob.find("small_enum");
+	// or done directly with known types.
+	const loupe::type* vec4_type = blob.find<vec4>();
+
+	print(enum_type->name); // "small_enum"
+	print(enum_type->size); // 2
+	print(vec4_type->name); // "vec4"
+	print(vec4_type->size); // 16
+
+	// The category of the type can be fetched directly when known.
+	const loupe::enumeration& enum_data = std::get<loupe::enumeration>(enum_type->data);
+	for (const loupe::enum_entry& entry : enum_data.entires)
 	{
-		print(entry.name);                   // "value0", "value1", "COUNT"
-		print(entry.value);                  //  0,        1,        2
-		print(entry.metadata.has<hidden>()); // "false",  "false",  "true"
+		auto* tooltip = entry.metadata.find<description>();
+
+		print(entry.name);                   // "value0",  "value1", "COUNT"
+		print(entry.value);                  //  0,         1,        2
+		print(entry.metadata.has<hidden>()); // "false",   "false",  "true"
+		print(tooltip ? tooltip->text : ""); // "A value", "",       ""
 	}
 
-	// Type lookup can also be done directly with known types.
-	const loupe::type* vec4_type = blob.find<vec4>();
-	// Visitation can respond to any of the type categories.
+	// Otherwise, the visitation pattern can respond to the three possible categories.
 	vec4_type->visit(
-		[&](const loupe::fundamental& data) { /*...*/ },
+		[&](const loupe::fundamental& data) {
+			/*...*/
+		},
 		[&](const loupe::structure& data) {
 			const loupe::property* float_property = blob.find_property<float>();
 			for (const loupe::member& m : data.members)
@@ -100,7 +113,9 @@ int main()
 				print(m.metadata.has<hidden>()); // "false", "false", "false", "true"
 			}
 		},
-		[&](const loupe::enumeration& data) { /*...*/ }
+		[&](const loupe::enumeration& data) {
+			/*...*/
+		}
 	);
 }
 ```
