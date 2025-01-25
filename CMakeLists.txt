@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.17.1)
 
-set(CMAKE_GENERATOR_PLATFORM Win32)
-set(CMAKE_VS_PLATFORM_NAME Win32)
-
 project(loupe LANGUAGES CXX)
 
 include(cmake/Utilities.cmake)
