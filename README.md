@@ -13,6 +13,7 @@ The core Loupe API does not require Run-Time Type Information (RTTI) or Exceptio
 - [x] Support for user defined containers
 - [x] Reflecting getters + setters
 - [ ] Serialization ready (bring your own archiver)
+- [ ] Support beyond the Windows platform
 - [x] User-defined metadata attributes
 - [x] Stateful metadata (such as a range bound on members)
 
@@ -20,7 +21,6 @@ The core Loupe API does not require Run-Time Type Information (RTTI) or Exceptio
 - Reflecting and invoking functions
 - Single header include option
 - Blob coverage detection, serializing only visited properties
-- Support beyond the Windows platform
 - Debugger .natvis files
 - Support for custom allocators
 
@@ -122,6 +122,7 @@ int main()
 
 # Default Serialization Dependencies
 - [Cereal 1.3.2](https://github.com/EmilianC/cereal/tree/fork-stable)
+  - [Compile-Time-Type-Information (CTTI)](https://github.com/Manu343726/ctti)
 
-# Test Project Dependencies
+# Dependencies for Running Tests
 - [Catch 2.13.9](https://github.com/catchorg/Catch2/tree/v2.x)
