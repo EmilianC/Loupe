@@ -54,7 +54,7 @@ static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected."); 
 
 #define MEMBERS                                                                            \
 	; std::vector<loupe::member>& members = std::get<loupe::structure>(type.data).members; \
-	int count = 0;                                                                         \
+	std::size_t count = 0;                                                                 \
 	loupe::detail::on_scope_exit reserver = [&] { members.reserve(count); };
 
 #define REF_MEMBER(member, ...) REF_MEMBER_GET_SET(member, nullptr, nullptr, __VA_ARGS__)
