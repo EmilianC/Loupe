@@ -192,7 +192,7 @@ namespace loupe
 			if (structure.bases.empty())
 				return nullptr;
 
-			LOUPE_ASSERT(structure.bases.size() == 1, "");
+			LOUPE_ASSERT(structure.bases.size() == 1, "find_common_ancestor() does not support multiple-inheritance.");
 			return structure.bases[0];
 		};
 
