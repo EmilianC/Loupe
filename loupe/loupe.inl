@@ -123,7 +123,9 @@ namespace loupe::detail
 			if constexpr (std::is_default_constructible_v<reflected_type>)
 			{
 				type.default_construct_at = [](void* location) {
-					LOUPE_ASSERT(reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) == 0, "Construction location for type is misaligned.");
+					LOUPE_ASSERT(location && (reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) == 0),
+						"Attempting to construct an object at an invalid address.");
+
 					new (location) reflected_type;
 				};
 			}
@@ -135,6 +137,9 @@ namespace loupe::detail
 				if constexpr (std::is_destructible_v<reflected_type> && !std::is_trivially_destructible_v<reflected_type>)
 				{
 					type.destruct_at = [](void* location) {
+						LOUPE_ASSERT(location && (reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) == 0),
+							"Attempting to destruct an object at an invalid address.");
+
 						static_cast<reflected_type*>(location)->~reflected_type();
 					};
 				}
