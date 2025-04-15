@@ -47,11 +47,6 @@ function(loupe_set_warnings target_name)
 		/permissive- # standards conformance mode for MSVC compiler.
 	)
 
-	set(MSVC_DISABLED_WARNINGS
-		/wd4100 # 'identifier' : unreferenced formal parameter
-		/wd4505 # 'function' : unreferenced local function has been removed
-	)
-
 	set(CLANG_WARNINGS
 		-Wall
 		-Wextra              # reasonable and standard
@@ -82,7 +77,7 @@ function(loupe_set_warnings target_name)
 	set(MSVC_WARNINGS ${MSVC_WARNINGS} /WX)
 
 	if(MSVC)
-		set(PROJECT_WARNINGS ${MSVC_WARNINGS} ${MSVC_DISABLED_WARNINGS})
+		set(PROJECT_WARNINGS ${MSVC_WARNINGS})
 	elseif(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
 		set(PROJECT_WARNINGS ${CLANG_WARNINGS})
 	elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
