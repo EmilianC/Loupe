@@ -61,7 +61,7 @@ namespace loupe
 
 		for (unsigned i = 0; const detail::type_task& task : tasks)
 		{
-			task.initialize_type(blob, blob.types[i++]);
+			task.initialize_type(blob.types[i++]);
 		}
 
 		std::vector<detail::property_task> property_tasks;

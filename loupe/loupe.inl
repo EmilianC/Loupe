@@ -38,7 +38,7 @@ namespace loupe::detail
 	struct type_task
 	{
 		std::string_view name;
-		void (*initialize_type)(const reflection_blob&, type&) = nullptr;
+		void (*initialize_type)(type&) = nullptr;
 		void (*initialize_data)(reflection_blob&, std::vector<property>&, std::vector<property_task>&, type&, task_data_stage) = nullptr;
 	};
 
@@ -108,7 +108,7 @@ namespace loupe::detail
 	}
 
 	template<typename reflected_type>
-	void init_type_data(const reflection_blob& blob, type& type)
+	void init_type_data(type& type)
 	{
 		if constexpr (std::is_void_v<reflected_type>)
 		{
@@ -158,7 +158,7 @@ namespace loupe::detail
 	}
 
 	template<typename... Tags>
-	void add_metadata(const reflection_blob& blob, metadata_container& container, Tags&&... tags)
+	void add_metadata(const reflection_blob& blob, metadata_container& container, [[maybe_unused]] Tags&&... tags)
 	{
 		if constexpr (sizeof...(Tags) > 0)
 		{
