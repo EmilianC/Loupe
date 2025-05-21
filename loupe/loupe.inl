@@ -146,7 +146,7 @@ namespace loupe::detail
 			}
 			else if constexpr (std::is_enum_v<reflected_type> && !std::is_same_v<reflected_type, std::byte>)
 			{
-				static_assert(std::is_same_v<std::underlying_type_t<reflected_type>, uint16_t>, "Reflected enumerations must be of uint16_t type.");
+				static_assert(std::is_same_v<std::underlying_type_t<reflected_type>, std::uint16_t>, "Reflected enumerations must be of uint16_t type.");
 				type.data = loupe::enumeration {
 					.strongly_typed = std::is_scoped_enum_v<reflected_type>
 				};
@@ -186,7 +186,7 @@ namespace loupe::detail
 	}
 
 	template<typename... Tags>
-	enum_entry create_enum_entry(const reflection_blob& blob, std::string_view name, uint16_t value, Tags&&... tags)
+	enum_entry create_enum_entry(const reflection_blob& blob, std::string_view name, std::uint16_t value, Tags&&... tags)
 	{
 		enum_entry entry {
 			.name = name,

@@ -86,24 +86,24 @@ namespace loupe
 		return false;
 	}
 
-	const uint16_t* enumeration::find_value(std::string_view name) const
+	const std::uint16_t* enumeration::find_value(std::string_view name) const
 	{
 		if (const enum_entry* entry = find_entry(name))
 		{
 			return &entry->value;
 		}
 
-		return nullptr; 
+		return nullptr;
 	}
 
-	const std::string_view* enumeration::find_name(uint16_t value) const
+	const std::string_view* enumeration::find_name(std::uint16_t value) const
 	{
 		if (const enum_entry* entry = find_entry(value))
 		{
 			return &entry->name;
 		}
 
-		return nullptr; 
+		return nullptr;
 	}
 
 	const enum_entry* enumeration::find_entry(std::string_view name) const
@@ -119,7 +119,7 @@ namespace loupe
 		return nullptr;
 	}
 
-	const enum_entry* enumeration::find_entry(uint16_t value) const
+	const enum_entry* enumeration::find_entry(std::uint16_t value) const
 	{
 		for (const enum_entry& entry : entries)
 		{

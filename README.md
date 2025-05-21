@@ -28,7 +28,7 @@ The core Loupe API does not require Run-Time Type Information (RTTI) or Exceptio
 
 ```cpp
 //-- data.h --//
-enum class small_enum : uint16_t
+enum class small_enum : std::uint16_t
 {
 	value0,
 	value1,

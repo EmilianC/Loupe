@@ -146,7 +146,7 @@ namespace loupe
 	struct enum_entry
 	{
 		std::string_view name;
-		uint16_t value;
+		std::uint16_t value;
 		metadata_container metadata;
 	};
 
@@ -156,11 +156,11 @@ namespace loupe
 		std::vector<enum_entry> entries;
 		bool strongly_typed = false;
 
-		[[nodiscard]] const uint16_t*         find_value(std::string_view name) const;
-		[[nodiscard]] const std::string_view* find_name(uint16_t value) const;
+		[[nodiscard]] const std::uint16_t*    find_value(std::string_view name) const;
+		[[nodiscard]] const std::string_view* find_name(std::uint16_t value) const;
 
 		[[nodiscard]] const enum_entry* find_entry(std::string_view name) const;
-		[[nodiscard]] const enum_entry* find_entry(uint16_t value) const;
+		[[nodiscard]] const enum_entry* find_entry(std::uint16_t value) const;
 	};
 
 	//

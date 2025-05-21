@@ -170,7 +170,7 @@ namespace loupe
 		LOUPE_ASSERT(base_struct_pointer, "Base pointer cannot be null.");
 		if constexpr (!std::is_same_v<To, void>)
 		{
-			LOUPE_ASSERT((data->try_as<enumeration>() && std::is_same_v<uint16_t, To>) || get_type_name<To>() == data->signature,
+			LOUPE_ASSERT((data->try_as<enumeration>() && std::is_same_v<std::uint16_t, To>) || get_type_name<To>() == data->signature,
 				"Requested target type does not match the property's signature.");
 		}
 
@@ -181,7 +181,7 @@ namespace loupe
 	To member::get_copy_from(void* base_struct_pointer) const
 	{
 		LOUPE_ASSERT(base_struct_pointer, "Base pointer cannot be null.");
-		LOUPE_ASSERT((data->try_as<enumeration>() && std::is_same_v<uint16_t, To>) || get_type_name<To>() == data->signature,
+		LOUPE_ASSERT((data->try_as<enumeration>() && std::is_same_v<std::uint16_t, To>) || get_type_name<To>() == data->signature,
 			"Requested target type does not match the property's signature.");
 
 		To result;
@@ -202,7 +202,7 @@ namespace loupe
 	void member::set_on(void* base_struct_pointer, From value) const
 	{
 		LOUPE_ASSERT(base_struct_pointer, "Base pointer cannot be null.");
-		LOUPE_ASSERT((data->try_as<enumeration>() && std::is_same_v<uint16_t, From>) || get_type_name<From>() == data->signature,
+		LOUPE_ASSERT((data->try_as<enumeration>() && std::is_same_v<std::uint16_t, From>) || get_type_name<From>() == data->signature,
 			"Provided type does not match the property's signature.");
 
 		if (setter)
