@@ -93,7 +93,7 @@ namespace loupe
 
 		template<typename Tag> [[nodiscard]]
 		const Tag* find() const;
-		
+
 		struct entry { const type* type; std::any value; };
 		std::vector<entry> entries;
 	};
@@ -124,13 +124,20 @@ namespace loupe
 	};
 
 	//
+	struct base
+	{
+		const type* type = nullptr;
+		std::size_t offset;
+	};
+
+	//
 	struct fundamental {};
 
 	//
 	struct structure
 	{
 		std::vector<member> members;
-		std::vector<const type*> bases;
+		std::vector<base> bases;
 
 		// Iterates over all members, including any from inherited bases.
 		template<typename Functor>
@@ -210,7 +217,7 @@ namespace loupe
 		template<typename Type>
 		[[nodiscard]] const property* find_property() const;
 		[[nodiscard]] const property* find_property(std::string_view signature) const;
-		
+
 	private:
 		friend reflection_blob reflect(unsigned int);
 

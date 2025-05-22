@@ -4,6 +4,8 @@
 #include "private_members.h"
 #include "property_adapters.h"
 
+#include <bit>
+
 namespace loupe
 {
 	// The starting point for retrieving reflection data. This cannot be
@@ -52,7 +54,7 @@ static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected."); 
 #define REF_VALUE(value, ...) loupe::detail::create_enum_entry(blob, #value, std::to_underlying(reflected_type::value), __VA_ARGS__),
 
 #define BASES                 if (stage == loupe::detail::task_data_stage::bases) std::get<loupe::structure>(type.data).bases =
-#define REF_BASE(base_type)   loupe::detail::find_base<base_type, reflected_type>(blob),
+#define REF_BASE(base_type)   loupe::detail::create_base<base_type, reflected_type>(blob),
 
 #define USER_CONSTRUCTOR(...) ; type.user_constructor = loupe::detail::make_user_constructor<reflected_type, __VA_ARGS__>();
 

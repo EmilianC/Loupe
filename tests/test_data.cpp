@@ -108,6 +108,13 @@ REFLECT(nested::base_object)
 	}
 REF_END;
 
+REFLECT(nested::base_physics)
+	MEMBERS {
+		REF_MEMBER(velocity)
+	}
+REF_END;
+
+
 REFLECT(quaternion) MEMBERS {
 	REF_MEMBER(x)
 	REF_MEMBER(y)
@@ -128,6 +135,7 @@ REFLECT(mat3) MEMBERS {
 REFLECT(game_object)
 	BASES {
 		REF_BASE(nested::base_object)
+		REF_BASE(nested::base_physics)
 	}
 	MEMBERS {
 		REF_MEMBER(health, range(0.0f, 100.0f))

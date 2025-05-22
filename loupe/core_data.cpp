@@ -19,12 +19,12 @@ namespace loupe
 
 	bool structure::is_derived_from(const type& type) const
 	{
-		for (const struct type* base : bases)
+		for (const base& base : bases)
 		{
-			if (&type == base)
+			if (base.type == &type)
 				return true;
 
-			if (std::get<structure>(base->data).is_derived_from(type))
+			if (std::get<structure>(base.type->data).is_derived_from(type))
 				return true;
 		}
 
@@ -41,9 +41,9 @@ namespace loupe
 			}
 		}
 
-		for (const type* base : bases)
+		for (const base& base : bases)
 		{
-			if (const member* member = std::get<loupe::structure>(base->data).find_member(name))
+			if (const member* member = std::get<loupe::structure>(base.type->data).find_member(name))
 			{
 				return member;
 			}
@@ -62,9 +62,9 @@ namespace loupe
 			}
 		}
 
-		for (const type* base : bases)
+		for (const base& base : bases)
 		{
-			if (const member* member = std::get<loupe::structure>(base->data).find_member(offset))
+			if (const member* member = std::get<loupe::structure>(base.type->data).find_member(offset))
 			{
 				return member;
 			}
@@ -193,7 +193,7 @@ namespace loupe
 				return nullptr;
 
 			LOUPE_ASSERT(structure.bases.size() == 1, "find_common_ancestor() does not support multiple-inheritance.");
-			return structure.bases[0];
+			return structure.bases[0].type;
 		};
 
 		auto count_depth = [&](const type& node) -> int {
@@ -300,6 +300,11 @@ REFLECT(loupe::member) MEMBERS {
 	REF_MEMBER(offset)
 	REF_MEMBER(data)
 	REF_MEMBER(metadata)
+} REF_END;
+
+REFLECT(loupe::base) MEMBERS {
+	REF_MEMBER(type)
+	REF_MEMBER(offset)
 } REF_END;
 
 REFLECT(loupe::structure) MEMBERS {

@@ -226,14 +226,30 @@ namespace loupe::detail
 	}
 
 	template<typename Base, typename Derived>
-	const type* find_base(const reflection_blob& blob)
+	std::size_t get_base_offset()
+	{
+		const Derived* derived_ptr = nullptr;
+
+		// The increment is required because static_cast<> will not apply an offset to a nullptr.
+		++derived_ptr;
+		const Base* base_ptr = static_cast<const Base*>(derived_ptr);
+
+		return std::bit_cast<std::size_t>(base_ptr) - std::bit_cast<std::size_t>(derived_ptr);
+	}
+
+	template<typename Base, typename Derived>
+	base create_base(const reflection_blob& blob)
 	{
 		static_assert(std::is_base_of_v<Base, Derived>, "The reflected base is not actually a base class of the main type.");
 		static_assert(std::is_class_v<Base>, "A reflected base must be either a class or struct type.");
 
-		const type* base_type = blob.find<Base>();
-		LOUPE_ASSERT(base_type, "Base class type not registered. Base classes must also be reflected separately.");
+		base base {
+			.type = blob.find<Base>(),
+			.offset = get_base_offset<Base, Derived>()
+		};
 
-		return base_type;
+		LOUPE_ASSERT(base.type, "Base class type not registered. Base classes must also be reflected separately.");
+
+		return base;
 	}
 }
