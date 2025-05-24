@@ -46,7 +46,7 @@ namespace loupe
 		});
 
 #ifdef LOUPE_ASSERTS_ENABLED
-		// check for duplicate tasks.
+		// Check for duplicate tasks.
 		auto itr = std::adjacent_find(tasks.begin(), tasks.end(), [](const detail::type_task& left, const detail::type_task& right) {
 			return left.name == right.name;
 		});
@@ -94,6 +94,25 @@ namespace loupe
 		process_data_stage(detail::task_data_stage::enums);
 		process_data_stage(detail::task_data_stage::bases);
 		process_data_stage(detail::task_data_stage::members);
+
+#ifdef LOUPE_ASSERTS_ENABLED
+		// Check that bases are reflected in the correct order.
+		for (const type& type : blob.types)
+		{
+			if (const auto* structure = std::get_if<loupe::structure>(&type.data))
+			{
+				if (structure->bases.size() > 1)
+				{
+					size_t offset = 0;
+					for (const base& base : structure->bases)
+					{
+						LOUPE_ASSERT(base.offset >= offset, "Bases must be reflected in the same order that they are inherited.");
+						offset = base.offset;
+					}
+				}
+			}
+		}
+#endif
 
 		return blob;
 	}
