@@ -220,9 +220,9 @@ namespace loupe
 	template<typename Functor>
 	void structure::for_each_member(Functor&& func) const
 	{
-		for (const type* base : bases)
+		for (const base& base : bases)
 		{
-			std::get<structure>(base->data).for_each_member(func);
+			std::get<structure>(base.type->data).for_each_member(func);
 		}
 
 		for (const member& member : members)
