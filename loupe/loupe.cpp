@@ -46,11 +46,13 @@ namespace loupe
 		});
 
 #ifdef LOUPE_ASSERTS_ENABLED
-		// Check for duplicate tasks.
-		auto itr = std::adjacent_find(tasks.begin(), tasks.end(), [](const detail::type_task& left, const detail::type_task& right) {
-			return left.name == right.name;
-		});
-		LOUPE_ASSERT(itr == tasks.end(), "A type has been reflected multiple times.");
+		{
+			// Check for duplicate tasks.
+			auto itr = std::adjacent_find(tasks.begin(), tasks.end(), [](const detail::type_task& left, const detail::type_task& right) {
+				return left.name == right.name;
+			});
+			LOUPE_ASSERT(itr == tasks.end(), "A unique type has been reflected more than once.");
+		}
 #endif
 
 		blob.types.resize(tasks.size());
@@ -96,11 +98,11 @@ namespace loupe
 		process_data_stage(detail::task_data_stage::members);
 
 #ifdef LOUPE_ASSERTS_ENABLED
-		// Check that bases are reflected in the correct order.
 		for (const type& type : blob.types)
 		{
 			if (const auto* structure = std::get_if<loupe::structure>(&type.data))
 			{
+				// Check that bases are reflected in the order of inheritance.
 				if (structure->bases.size() > 1)
 				{
 					size_t offset = 0;
@@ -109,6 +111,23 @@ namespace loupe
 						LOUPE_ASSERT(base.offset >= offset, "Bases must be reflected in the same order that they are inherited.");
 						offset = base.offset;
 					}
+				}
+
+				if (structure->members.size() > 1)
+				{
+					// Check that members are reflected in ascending memory order.
+					size_t offset = 0;
+					for (const member& member : structure->members)
+					{
+						LOUPE_ASSERT(member.offset >= offset, "Members must be reflected in the same order they appear in the structure or class.");
+						offset = member.offset;
+					}
+
+					// Check for duplicate member reflection.
+					auto itr = std::adjacent_find(structure->members.begin(), structure->members.end(), [](const member& left, const member& right) {
+						return left.name == right.name;
+					});
+					LOUPE_ASSERT(itr == structure->members.end(), "A structure or class member has been reflected more than once.");
 				}
 			}
 		}
