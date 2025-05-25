@@ -130,6 +130,24 @@ namespace loupe
 					LOUPE_ASSERT(itr == structure->members.end(), "A structure or class member has been reflected more than once.");
 				}
 			}
+			else if (const auto* enumeration = std::get_if<loupe::enumeration>(&type.data))
+			{
+				if (enumeration->entries.size() > 1)
+				{
+					// Check for duplicate value entry reflection.
+					std::vector<std::string_view> entry_names;
+					entry_names.reserve(enumeration->entries.size());
+
+					for (const enum_entry& entry : enumeration->entries)
+					{
+						entry_names.push_back(entry.name);
+					}
+					std::sort(entry_names.begin(), entry_names.end());
+
+					auto itr = std::adjacent_find(entry_names.begin(), entry_names.end());
+					LOUPE_ASSERT(itr == entry_names.end(), "An enumeration value has been reflected more than once.");
+				}
+			}
 		}
 #endif
 
