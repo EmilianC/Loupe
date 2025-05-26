@@ -112,9 +112,12 @@ namespace loupe
 		template<typename To = void> [[nodiscard]]
 		To* offset_from(void* base_struct_pointer) const;
 
+		template<typename To = void> [[nodiscard]]
+		const To* offset_from(const void* base_struct_pointer) const;
+
 		// Returns a direct copy of the member value, or the result of calling the reflected getter.
 		template<typename To> [[nodiscard]]
-		To get_copy_from(void* base_struct_pointer) const;
+		To get_copy_from(const void* base_struct_pointer) const;
 
 		// Sets the member directly or calls the setter function if one was reflected.
 		template<typename From>

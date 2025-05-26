@@ -49,6 +49,19 @@ namespace loupe
 
 		template<typename T>
 		struct always_false : public std::false_type {};
+
+		template<typename T> [[nodiscard]]
+		bool matches_signature(const property* property)
+		{
+			// As a convenience, allow the use of std::uint16_t directly when dealing with enumerations.
+			if constexpr (std::is_same_v<std::uint16_t, std::remove_cv_t<T>>)
+			{
+				if (property->try_as<enumeration>())
+					return true;
+			}
+
+			return get_type_name<T>() == property->signature;
+		}
 	}
 
 	// Returns a string representation of the given type's name.
@@ -164,35 +177,36 @@ namespace loupe
 	template<typename To> [[nodiscard]]
 	To* member::offset_from(void* base_struct_pointer) const
 	{
-		static_assert(!std::is_const_v<To>, "Requested target type cannot be const.");
-		static_assert(!std::is_volatile_v<To>, "Requested target type cannot be volatile.");
-
 		LOUPE_ASSERT(base_struct_pointer, "Base pointer cannot be null.");
-		if constexpr (!std::is_same_v<To, void>)
-		{
-			LOUPE_ASSERT((data->try_as<enumeration>() && std::is_same_v<std::uint16_t, To>) || get_type_name<To>() == data->signature,
-				"Requested target type does not match the property's signature.");
-		}
+		LOUPE_ASSERT(std::is_void_v<To> || detail::matches_signature<To>(data), "Requested target type does not match the property's signature.");
 
 		return reinterpret_cast<To*>(static_cast<std::byte*>(base_struct_pointer) + offset);
 	}
 
 	template<typename To> [[nodiscard]]
-	To member::get_copy_from(void* base_struct_pointer) const
+	const To* member::offset_from(const void* base_struct_pointer) const
 	{
 		LOUPE_ASSERT(base_struct_pointer, "Base pointer cannot be null.");
-		LOUPE_ASSERT((data->try_as<enumeration>() && std::is_same_v<std::uint16_t, To>) || get_type_name<To>() == data->signature,
-			"Requested target type does not match the property's signature.");
+		LOUPE_ASSERT(std::is_void_v<To> || detail::matches_signature<To>(data), "Requested target type does not match the property's signature.");
+
+		return reinterpret_cast<const To*>(static_cast<const std::byte*>(base_struct_pointer) + offset);
+	}
+
+	template<typename To> [[nodiscard]]
+	To member::get_copy_from(const void* base_struct_pointer) const
+	{
+		LOUPE_ASSERT(base_struct_pointer, "Base pointer cannot be null.");
+		LOUPE_ASSERT(detail::matches_signature<To>(data), "Requested target type does not match the property's signature.");
 
 		To result;
 		if (getter)
 		{
-			auto* func = static_cast<To (*)(void*)>(getter);
+			auto* func = static_cast<To (*)(const void*)>(getter);
 			result = func(base_struct_pointer);
 		}
 		else
 		{
-			result = *offset_from<To>(base_struct_pointer);
+			result = *offset_from<const To>(base_struct_pointer);
 		}
 
 		return result;
@@ -201,19 +215,27 @@ namespace loupe
 	template<typename From>
 	void member::set_on(void* base_struct_pointer, From value) const
 	{
+		static_assert(!std::is_const_v<From>, "The new value cannot be passed as a const copy.");
+
 		LOUPE_ASSERT(base_struct_pointer, "Base pointer cannot be null.");
-		LOUPE_ASSERT((data->try_as<enumeration>() && std::is_same_v<std::uint16_t, From>) || get_type_name<From>() == data->signature,
-			"Provided type does not match the property's signature.");
+		LOUPE_ASSERT(detail::matches_signature<From>(data), "Provided type does not match the property's signature.");
 
 		if (setter)
 		{
-			auto* func = static_cast<void(*)(void*, From)>(setter);
-			func(base_struct_pointer, std::move(value));
+			auto* func = static_cast<void(*)(void*, From&)>(setter);
+			func(base_struct_pointer, value);
 		}
 		else
 		{
 			From* ptr = offset_from<From>(base_struct_pointer);
-			*ptr = std::move(value);
+			if constexpr (std::is_move_assignable_v<From>)
+			{
+				*ptr = std::move(value);
+			}
+			else
+			{
+				*ptr = value;
+			}
 		}
 	}
 
