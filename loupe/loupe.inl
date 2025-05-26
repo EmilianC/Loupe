@@ -48,7 +48,7 @@ namespace loupe::detail
 	template<typename Type>
 	void scan_properties(reflection_blob& blob, std::vector<property>& properties, std::vector<property_task>& property_tasks)
 	{
-		const std::string_view property_signature = get_type_name<std::remove_cv_t<Type>>();
+		const std::string_view property_signature = loupe::get_type_name<Type>();
 		if (blob.find_property(property_signature))
 			return;
 
@@ -123,7 +123,7 @@ namespace loupe::detail
 			if constexpr (std::is_default_constructible_v<reflected_type>)
 			{
 				type.default_construct_at = [](void* location) {
-					LOUPE_ASSERT(location && (reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) == 0),
+					LOUPE_ASSERT(location && (std::bit_cast<std::size_t>(location) % alignof(reflected_type) == 0),
 						"Attempting to construct an object at an invalid address.");
 
 					new (location) reflected_type;
@@ -137,7 +137,7 @@ namespace loupe::detail
 				if constexpr (std::is_destructible_v<reflected_type> && !std::is_trivially_destructible_v<reflected_type>)
 				{
 					type.destruct_at = [](void* location) {
-						LOUPE_ASSERT(location && (reinterpret_cast<std::uintptr_t>(location) % alignof(reflected_type) == 0),
+						LOUPE_ASSERT(location && (std::bit_cast<std::size_t>(location) % alignof(reflected_type) == 0),
 							"Attempting to destruct an object at an invalid address.");
 
 						static_cast<reflected_type*>(location)->~reflected_type();
