@@ -214,7 +214,7 @@ namespace loupe
 		[[nodiscard]] const type* find() const;
 		[[nodiscard]] const type* find(std::string_view name) const;
 
-		template<typename Type>
+		template<typename Property>
 		[[nodiscard]] const property* find_property() const;
 		[[nodiscard]] const property* find_property(std::string_view signature) const;
 
