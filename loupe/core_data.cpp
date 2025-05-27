@@ -23,7 +23,10 @@ namespace loupe
 		{
 			if (base.type == &type)
 				return true;
+		}
 
+		for (const base& base : bases)
+		{
 			if (std::get<structure>(base.type->data).is_derived_from(type))
 				return true;
 		}
