@@ -239,17 +239,53 @@ namespace loupe
 		}
 	}
 
-	template<typename Functor>
-	void structure::for_each_member(Functor&& func) const
+	template<typename Functor> requires std::invocable<Functor, const member&>
+	void structure::walk_members(Functor&& func) const
 	{
 		for (const base& base : bases)
 		{
-			std::get<structure>(base.type->data).for_each_member(func);
+			std::get<structure>(base.type->data).walk_members(func);
 		}
 
 		for (const member& member : members)
 		{
 			func(member);
+		}
+	}
+
+	template<typename Functor> requires std::invocable<Functor, const member&, void*>
+	void structure::walk_members(void* base_struct_pointer, Functor&& func) const
+	{
+		LOUPE_ASSERT(base_struct_pointer, __FUNCTION__ "() requires a pointer to an object to walk.");
+
+		for (const base& base : bases)
+		{
+			const auto& base_structure = std::get<loupe::structure>(base.type->data);
+
+			base_structure.walk_members(static_cast<std::byte*>(base_struct_pointer) + base.offset, func);
+		}
+
+		for (const member& member : members)
+		{
+			func(member, static_cast<std::byte*>(base_struct_pointer) + member.offset);
+		}
+	}
+
+	template<typename Functor> requires std::invocable<Functor, const member&, const void*>
+	void structure::walk_members(const void* base_struct_pointer, Functor&& func) const
+	{
+		LOUPE_ASSERT(base_struct_pointer, __FUNCTION__ "() requires a pointer to an object to walk.");
+
+		for (const base& base : bases)
+		{
+			const auto& base_structure = std::get<loupe::structure>(base.type->data);
+
+			base_structure.walk_members(static_cast<const std::byte*>(base_struct_pointer) + base.offset, func);
+		}
+
+		for (const member& member : members)
+		{
+			func(member, static_cast<const std::byte*>(base_struct_pointer) + member.offset);
 		}
 	}
 

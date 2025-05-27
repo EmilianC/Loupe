@@ -4,6 +4,7 @@
 #include "private_members.h"
 
 #include <any>
+#include <concepts>
 #include <memory>
 #include <span>
 #include <string_view>
@@ -143,9 +144,20 @@ namespace loupe
 		std::vector<member> members;
 		std::vector<base> bases;
 
-		// Iterates over all members, including any from inherited bases.
-		template<typename Functor>
-		void for_each_member(Functor&& func) const;
+		// Iterates over all member reflection data, including those from inherited bases.
+		// Members which are structures are NOT recursed into, however this can be
+		// accomplished by calling walk_members() again within the provided functor.
+		template<typename Functor> requires std::invocable<Functor, const member&>
+		void walk_members(Functor&&) const;
+
+		// Iterates over the members of an object instance, including any from inherited bases.
+		// The object pointer is offset to match each member during iteration.
+		// Members which are structures must be recursed into manually during the functor.
+		template<typename Functor> requires std::invocable<Functor, const member&, void*>
+		void walk_members(void* base_struct_pointer, Functor&&) const;
+
+		template<typename Functor> requires std::invocable<Functor, const member&, const void*>
+		void walk_members(const void* base_struct_pointer, Functor&&) const;
 
 		[[nodiscard]] bool is_derived_from(const type&) const;
 
