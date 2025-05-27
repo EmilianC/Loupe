@@ -138,7 +138,7 @@ REFLECT(game_object)
 		REF_BASE(nested::base_physics)
 	}
 	MEMBERS {
-		REF_MEMBER_GET_SET(health, nullptr, &game_object::set_health, range(0.0f, 100.0f))
+		REF_MEMBER_EX(health, nullptr, &game_object::set_health, range(0.0f, 100.0f))
 		REF_MEMBER(enabled)
 		REF_MEMBER(matrix)
 		REF_MEMBER(children)

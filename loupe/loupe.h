@@ -1,6 +1,7 @@
 // Copyright (c) 2022 Emilian Cioca
 #pragma once
 #include "assert.h"
+#include "core_data.h"
 #include "private_members.h"
 #include "property_adapters.h"
 
@@ -22,107 +23,99 @@ namespace loupe
 	void clear_reflect_tasks();
 }
 
-#define LOUPE_CONCATENATE(s1, s2) s1##s2
-#define LOUPE_CONCATENATE_INDIRECT(s1, s2) LOUPE_CONCATENATE(s1, s2)
-#define LOUPE_ANONYMOUS_VARIABLE(str) LOUPE_CONCATENATE_INDIRECT(str, __COUNTER__)
-
-// Allows for the use of complex template types as macro parameters. REFLECT(LOUPE_TEMPLATE(...))
-// Normally the ','s in a template parameter list would interfere with macro expansion.
-#define LOUPE_TEMPLATE(...) decltype(__VA_ARGS__())
-
-#define REFLECT_SIMPLE(type_name)                                                                                                                                                   \
-static_assert(std::is_class_v<type_name> || std::is_enum_v<type_name> || std::is_fundamental_v<type_name>, "Only structs/classes, enums, and fundamental types can be reflected."); \
-static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected.");                                                                                                     \
-[[maybe_unused]] static const auto& LOUPE_ANONYMOUS_VARIABLE(LOUPE_DUMMY_) =                                                                                                        \
-	loupe::detail::get_tasks().emplace_back(loupe::get_type_name<type_name>(), &loupe::detail::init_type_data<std::remove_cv_t<type_name>>, nullptr);
-
-#define REFLECT(type_name)                                                                                                                                                          \
-static_assert(std::is_class_v<type_name> || std::is_enum_v<type_name> || std::is_fundamental_v<type_name>, "Only structs/classes, enums, and fundamental types can be reflected."); \
-static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected.");                                                                                                     \
-[[maybe_unused]] static const auto& LOUPE_ANONYMOUS_VARIABLE(LOUPE_DUMMY_) =                                                                                                        \
-	loupe::detail::get_tasks().emplace_back(                                                                                                                                        \
-		loupe::get_type_name<type_name>(),                                                                                                                                          \
-		&loupe::detail::init_type_data<std::remove_cv_t<type_name>>,                                                                                                                \
-		[]([[maybe_unused]] loupe::reflection_blob& blob,                                                                                                                           \
-		   [[maybe_unused]] std::vector<loupe::property>& properties,                                                                                                               \
-		   [[maybe_unused]] std::vector<loupe::detail::property_task>& property_tasks,                                                                                              \
-		   [[maybe_unused]] loupe::type& type,                                                                                                                                      \
-		   [[maybe_unused]] loupe::detail::task_data_stage stage)                                                                                                                   \
-		{                                                                                                                                                                           \
-			using reflected_type = std::remove_cv_t<type_name>;
-
-#define ENUM_VALUES           using namespace loupe::metadata; if (stage == loupe::detail::task_data_stage::enums) std::get<loupe::enumeration>(type.data).entries =
-#define REF_VALUE(value, ...) loupe::detail::create_enum_entry(blob, #value, std::to_underlying(reflected_type::value), __VA_ARGS__),
-
-#define BASES                 if (stage == loupe::detail::task_data_stage::bases) std::get<loupe::structure>(type.data).bases =
-#define REF_BASE(base_type)   loupe::detail::create_base<base_type, reflected_type>(blob),
-
-#define USER_CONSTRUCTOR(...) ; type.user_constructor = loupe::detail::make_user_constructor<reflected_type, __VA_ARGS__>();
-
-#define MEMBERS                                                                            \
-	; std::vector<loupe::member>& members = std::get<loupe::structure>(type.data).members; \
-	std::size_t count = 0;                                                                 \
-	loupe::detail::on_scope_exit reserver = [&] { members.reserve(count); };
-
-#define REF_MEMBER(member, ...) REF_MEMBER_GET_SET(member, nullptr, nullptr, __VA_ARGS__)
-#define REF_MEMBER_GET_SET(member, getter, setter, ...) {                                                     \
-	++count;                                                                                                  \
-	using MemberType = decltype(reflected_type::member);                                                      \
-	if (stage == loupe::detail::task_data_stage::scan_properties)                                             \
-	{                                                                                                         \
-		loupe::detail::scan_properties<MemberType>(blob, properties, property_tasks);                         \
-	}                                                                                                         \
-	else if (stage == loupe::detail::task_data_stage::members)                                                \
-	{                                                                                                         \
-		using GetterType = decltype(getter);                                                                  \
-		using SetterType = decltype(setter);                                                                  \
-		static_assert(                                                                                        \
-			std::is_null_pointer_v<GetterType> ||                                                             \
-			std::is_invocable_r_v<MemberType, GetterType, const reflected_type*>,                             \
-			"Getter should be of the form: `MemberType get() const`.");                                       \
-		static_assert(                                                                                        \
-			std::is_null_pointer_v<SetterType> ||                                                             \
-			std::is_invocable_v<SetterType, reflected_type*, MemberType&&> ||                                 \
-			std::is_invocable_v<SetterType, reflected_type*, const MemberType&>,                              \
-			"Setter should be callable with either a const reference or mutable r-value reference.");         \
-	                                                                                                          \
-		/* Opening lambdas as local template contexts to allow for better constexpr support. */	              \
-		void* getter_func = []<typename Signature>(Signature) -> void* {                                      \
-			if constexpr (!std::is_null_pointer_v<Signature>)                                                 \
-			{                                                                                                 \
-				return +[](const void* base_struct_pointer) -> MemberType {                                   \
-					const auto* object = static_cast<const reflected_type*>(base_struct_pointer);             \
-					return std::invoke_r<MemberType>(getter, object);                                         \
-				};                                                                                            \
-			} else return nullptr;                                                                            \
-		}(getter);                                                                                            \
-                                                                                                              \
-		void* setter_func = []<typename Signature>(Signature) -> void* {                                      \
-			if constexpr (!std::is_null_pointer_v<Signature>)                                                 \
-			{                                                                                                 \
-				if constexpr (std::is_invocable_v<SetterType, reflected_type*, MemberType&&>)                 \
-				{                                                                                             \
-					return +[](void* base_struct_pointer, MemberType& value) -> void {                        \
-						auto* object = static_cast<reflected_type*>(base_struct_pointer);                     \
-						std::invoke(setter, object, std::move(value));                                        \
-					};                                                                                        \
-				}                                                                                             \
-				else                                                                                          \
-				{                                                                                             \
-					return +[](void* base_struct_pointer, MemberType& value) -> void {                        \
-						auto* object = static_cast<reflected_type*>(base_struct_pointer);                     \
-						std::invoke(setter, object, value);                                                   \
-					};                                                                                        \
-				}                                                                                             \
-			} else return nullptr;                                                                            \
-		}(setter);                                                                                            \
-			                                                                                                  \
-		using namespace loupe::metadata;                                                                      \
-		members.push_back(loupe::detail::create_member<MemberType>(                                           \
-			blob, #member, __builtin_offsetof(reflected_type, member), getter_func, setter_func, __VA_ARGS__) \
-		);                                                                                                    \
-	}}
-
-#define REF_END ;});
-
 #include "loupe.inl"
+
+/*
+The macros defined bellow allow you to build up your reflection structures by opening
+a reflection block and specifying the various properties of your types.
+This must be done in .cpp files, so that they are not compiled multiple times.
+
+Each section of a reflection block is optional and they can be formatted freely.
+
+struct example_type : public base1, public base2
+{
+	example_type(int, float);
+private:
+	int _internal;
+public:
+	float memberA;
+	float memberB;
+	float memberC;
+	float memberD;
+
+	float get_memberD() const;
+	void set_memberD(float);
+
+	// Required to expose the private member to the reflection system.
+	PRIVATE_MEMBER(my_struct, member);
+};
+
+REFLECT(example_type)
+	USER_CONSTRUCTOR(int, float)
+	BASES {
+		REF_BASE(base1)
+		REF_BASE(base2)
+	}
+	MEMBERS {
+		REF_PRIVATE_MEMBER(_internal)
+		REF_MEMBER(memberA, display_name("My Value"), range(0.0f, 1.0f))
+		REF_MEMBER(memberB, readonly())
+		REF_MEMBER(memberC)
+		REF_MEMBER_EX(memberD,
+			&example_type::get_memberD,
+			&example_type::set_memberD,
+			not_serialized()
+		)
+	}
+REF_END;
+
+enum class example_enum : std::uint16_t
+{
+	value0, value1, COUNT
+};
+
+REFLECT(example_enum)
+	ENUM_VALUES {
+		REF_VALUE(value0)
+		REF_VALUE(value1)
+		REF_VALUE(COUNT, hidden())
+	}
+REF_END;
+*/
+
+// Quickly expose a type to the reflection system without opening a reflection block.
+#define REFLECT_SIMPLE(type_name) LOUPE_REFLECT_SIMPLE(type_name)
+
+// Opens a reflection block to describe the given type.
+#define REFLECT(type_name) LOUPE_REFLECT(type_name)
+
+	// Reflect enumerations and their values.
+	// Metadata can optionally be specific per-value.
+	#define ENUM_VALUES LOUPE_ENUM_VALUES
+		#define REF_VALUE(value, ...) LOUPE_REF_VALUE(value, __VA_ARGS__)
+
+	// Reflect the signature of a user-defined constructor.
+	// The constructor can be called dynamically later via `type::user_construct_at()`.
+	#define USER_CONSTRUCTOR(...)     LOUPE_USER_CONSTRUCTOR(__VA_ARGS__)
+
+	// Reflect base classes/structures of a type.
+	#define BASES LOUPE_BASES
+		#define REF_BASE(base_type)   LOUPE_REF_BASE(base_type)
+
+	// Reflect members of a class or structure. Any reflected getters and setters will
+	// automatically be used by `member::get_copy_from()` and `member::set_on()`.
+	// Metadata can optionally be specified per-member.
+	#define MEMBERS LOUPE_MEMBERS
+		#define REF_MEMBER(member, ...)                            LOUPE_REF_MEMBER_EX(        member, nullptr, nullptr, __VA_ARGS__)
+		#define REF_MEMBER_EX(member, getter, setter, ...)         LOUPE_REF_MEMBER_EX(        member, getter,  setter,  __VA_ARGS__)
+		#define REF_PRIVATE_MEMBER(member, ...)                    LOUPE_REF_PRIVATE_MEMBER_EX(member, nullptr, nullptr, __VA_ARGS__)
+		#define REF_PRIVATE_MEMBER_EX(member, getter, setter, ...) LOUPE_REF_PRIVATE_MEMBER_EX(member, getter,  setter,  __VA_ARGS__)
+
+// Terminates a reflection block.
+#define REF_END LOUPE_REF_END
+
+// Allows for the use of complex template types as macro parameters. Normally the
+// ','s in a template parameter list would interfere with macro expansion.
+// For example:
+//     `REF_BASE(LOUPE_TEMPLATE(base<int, float>))`
+#define LOUPE_TEMPLATE(...) decltype(__VA_ARGS__())
