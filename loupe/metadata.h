@@ -45,4 +45,10 @@ namespace loupe::metadata
 	{
 		return range<T>(std::numeric_limits<T>::min(), value);
 	}
+
+	template<typename T> [[nodiscard]]
+	range<T> clamp(T min, T max)
+	{
+		return range<T>(min, max);
+	}
 }
