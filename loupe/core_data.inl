@@ -269,7 +269,7 @@ namespace loupe
 
 		for (const member& member : members)
 		{
-			func(member, static_cast<std::byte*>(base_struct_pointer) + member.offset);
+			func(member, base_struct_pointer);
 		}
 	}
 
@@ -287,7 +287,7 @@ namespace loupe
 
 		for (const member& member : members)
 		{
-			func(member, static_cast<const std::byte*>(base_struct_pointer) + member.offset);
+			func(member, base_struct_pointer);
 		}
 	}
 

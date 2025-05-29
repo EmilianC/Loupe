@@ -151,7 +151,7 @@ namespace loupe
 		void walk_members(Functor&&) const;
 
 		// Iterates over the members of an object instance, including any from inherited bases.
-		// The object pointer is offset to match each member during iteration.
+		// The base_struct_pointer is offset for you to match the start of any bases.
 		// Members which are structures must be recursed into manually during the functor.
 		template<typename Functor> requires std::invocable<Functor, const member&, void*>
 		void walk_members(void* base_struct_pointer, Functor&&) const;
