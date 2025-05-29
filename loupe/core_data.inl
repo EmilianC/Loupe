@@ -53,14 +53,16 @@ namespace loupe
 		template<typename T> [[nodiscard]]
 		bool matches_signature(const property* property)
 		{
+			using TypeSignature = std::remove_cv_t<T>;
+
 			// As a convenience, allow the use of std::uint16_t directly when dealing with enumerations.
-			if constexpr (std::is_same_v<std::uint16_t, std::remove_cv_t<T>>)
+			if constexpr (std::is_same_v<std::uint16_t, TypeSignature>)
 			{
 				if (property->try_as<enumeration>())
 					return true;
 			}
 
-			return get_type_name<T>() == property->signature;
+			return get_type_name<TypeSignature>() == property->signature;
 		}
 	}
 
@@ -206,7 +208,7 @@ namespace loupe
 		}
 		else
 		{
-			result = *offset_from<const To>(base_struct_pointer);
+			result = *offset_from<To>(base_struct_pointer);
 		}
 
 		return result;
