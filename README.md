@@ -125,4 +125,4 @@ int main()
   - [Compile-Time-Type-Information (CTTI)](https://github.com/Manu343726/ctti)
 
 # Dependencies for Running Tests
-- [Catch 2.13.9](https://github.com/catchorg/Catch2/tree/v2.x)
+- [Catch 2.13.10](https://github.com/catchorg/Catch2/tree/v2.x)
