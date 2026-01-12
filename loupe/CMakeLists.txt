@@ -24,4 +24,3 @@ target_compile_definitions(loupe PUBLIC $<$<BOOL:${LOUPE_ENABLE_ASSERTS}>:LOUPE_
 target_link_libraries(loupe PUBLIC $<$<BOOL:${LOUPE_ARCHIVER_CEREAL}>:cereal>)
 loupe_set_warnings(loupe)
 loupe_disable_rtti(loupe OPTIONAL)
-loupe_disable_exceptions(loupe OPTIONAL)

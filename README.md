@@ -5,7 +5,7 @@ An extendible reflection library for modern C++, designed with game development 
 # Design goals
 Loupe's API is designed to be small and easy to use. Instead of scanning pre-main, Loupe produces your application's reflection tables when requested - you may store the result of this globally if you wish. Your reflection tables can be serialized to disk along with your data, allowing you to read data back safely even as your application continues to change.
 
-The core Loupe API does not require Run-Time Type Information (RTTI) or Exceptions, and is dependent only on the C++ standard library. Serialization backends should be implemented user-side so that you can chose your own archiver and better handle custom data. However, an archiver using `Cereal` is provided by default (which can at least serve as an example for creating your own).
+The core Loupe API does not require RTTI (Run-Time Type Information), and is dependent only on the C++ standard library. Serialization backends should be implemented user-side so that you can chose your own archiver and better handle custom data. However, an archiver using `Cereal` is provided by default (which can at least serve as an example for creating your own).
 
 # 1.0 Target Features
 - [ ] Diff between blobs to detect and reconcile changes

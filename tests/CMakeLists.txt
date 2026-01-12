@@ -36,4 +36,3 @@ target_compile_definitions(unit_tests
 )
 loupe_set_warnings(unit_tests)
 loupe_disable_rtti(unit_tests OPTIONAL)
-loupe_disable_exceptions(unit_tests OPTIONAL)

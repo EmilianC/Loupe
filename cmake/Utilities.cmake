@@ -111,28 +111,3 @@ function(loupe_disable_rtti target_name)
     endif()
   endif()
 endfunction()
-
-
-# Disables exceptions for the target. Accepts the [OPTIONAL] flag.
-# Changes made to the target are PRIVATE.
-function(loupe_disable_exceptions target_name)
-  cmake_parse_arguments(THIS "OPTIONAL" "" "" ${ARGN})
-
-  if (THIS_OPTIONAL)
-    option(LOUPE_DISABLE_EXCEPTIONS "Disables C++ exceptions." TRUE)
-  endif()
-
-  if (LOUPE_DISABLE_EXCEPTIONS OR NOT THIS_OPTIONAL)
-    target_compile_definitions(${target_name} PRIVATE _HAS_EXCEPTIONS=0)
-
-    if (MSVC)
-      target_compile_options(${target_name} PRIVATE /EHs-c-a-)
-    elseif (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
-      target_compile_options(${target_name} PRIVATE -fno-exceptions)
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      target_compile_options(${target_name} PRIVATE -fno-exceptions)
-    else()
-      message(AUTHOR_WARNING "Exceptions could not be disabled for '${CMAKE_CXX_COMPILER_ID}' compiler.")
-    endif()
-  endif()
-endfunction()
