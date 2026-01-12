@@ -296,10 +296,9 @@ static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected."); 
 	using MemberType = decltype(reflected_type::member);                   \
 	const std::size_t offset = __builtin_offsetof(reflected_type, member); \
 
-#define LOUPE_PRIVATE_MEMBER_PROLOGUE(member)                               \
-	using Inspector = reflected_type::loupe_reflect_private_##member<void>; \
-	using MemberType = Inspector::MemberType;                               \
-	const std::size_t offset = Inspector::offset;                           \
+#define LOUPE_PRIVATE_MEMBER_PROLOGUE(member)                                            \
+	using MemberType = reflected_type::_loupe_reflect_private_type_##member;             \
+	const std::size_t offset = reflected_type::_loupe_reflect_private_offset_##member(); \
 
 #define LOUPE_MEMBER_BODY_EX(member, getter, setter, ...)                                             \
 	++count;                                                                                          \
