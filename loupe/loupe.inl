@@ -157,7 +157,7 @@ namespace loupe::detail
 			}
 			else
 			{
-				static_assert(always_false<reflected_type>::value, "Unsupported type category.");
+				static_assert(false, "Unsupported type category.");
 			}
 		}
 	}

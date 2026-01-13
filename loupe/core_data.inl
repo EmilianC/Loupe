@@ -47,9 +47,6 @@ namespace loupe
 			return result;
 		}
 
-		template<typename T>
-		struct always_false : public std::false_type {};
-
 		template<typename T> [[nodiscard]]
 		bool matches_signature(const property* property)
 		{
@@ -142,7 +139,7 @@ namespace loupe
 		}
 		else
 		{
-			static_assert(detail::always_false<Data>::value, "Unsupported data category.");
+			static_assert(false, "Unsupported data category.");
 		}
 	}
 
