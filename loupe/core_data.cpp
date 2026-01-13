@@ -361,7 +361,7 @@ REFLECT(loupe::type) MEMBERS {
 } REF_END;
 
 REFLECT(loupe::reflection_blob) MEMBERS {
-	REF_PRIVATE_MEMBER(version)
-	REF_PRIVATE_MEMBER(types)
-	REF_PRIVATE_MEMBER(properties)
+	REF_MEMBER(version)
+	REF_MEMBER(types)
+	REF_MEMBER(properties)
 } REF_END;

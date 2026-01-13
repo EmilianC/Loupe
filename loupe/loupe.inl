@@ -292,81 +292,74 @@ static_assert(!std::is_const_v<type_name>, "Const types cannot be reflected."); 
 	std::size_t count = 0;                                                                 \
 	loupe::detail::on_scope_exit reserver = [&] { members.reserve(count); };
 
-#define LOUPE_MEMBER_PROLOGUE(member)                                      \
-	using MemberType = decltype(reflected_type::member);                   \
-	const std::size_t offset = __builtin_offsetof(reflected_type, member); \
-
-#define LOUPE_PRIVATE_MEMBER_PROLOGUE(member)                                            \
-	using MemberType = reflected_type::_loupe_reflect_private_type_##member;             \
-	const std::size_t offset = reflected_type::_loupe_reflect_private_offset_##member(); \
-
-#define LOUPE_MEMBER_BODY_EX(member, getter, setter, ...)                                             \
-	++count;                                                                                          \
-	if (stage == loupe::detail::task_data_stage::scan_properties)                                     \
-	{                                                                                                 \
-		loupe::detail::scan_properties<MemberType>(blob, properties, property_tasks);                 \
-	}                                                                                                 \
-	else if (stage == loupe::detail::task_data_stage::members)                                        \
-	{                                                                                                 \
-		using GetterType = decltype(getter);                                                          \
-		using SetterType = decltype(setter);                                                          \
-		static_assert(                                                                                \
-			std::is_null_pointer_v<GetterType> ||                                                     \
-			std::is_invocable_r_v<MemberType, GetterType, const reflected_type*>,                     \
-			"Getter should be of the form: `MemberType get() const`.");                               \
-		static_assert(                                                                                \
-			std::is_null_pointer_v<SetterType> ||                                                     \
-			std::is_invocable_v<SetterType, reflected_type*, MemberType&&> ||                         \
-			std::is_invocable_v<SetterType, reflected_type*, const MemberType&>,                      \
-			"Setter should be callable with either a const reference or mutable r-value reference."); \
-	                                                                                                  \
-		/* Opening lambdas as local template contexts to allow for better constexpr support. */	      \
-		void* getter_func = []<typename Signature>(Signature) -> void* {                              \
-			if constexpr (!std::is_null_pointer_v<Signature>)                                         \
-			{                                                                                         \
-				return +[](const void* base_struct_pointer) -> MemberType {                           \
-					const auto* object = static_cast<const reflected_type*>(base_struct_pointer);     \
-					return std::invoke_r<MemberType>(getter, object);                                 \
-				};                                                                                    \
-			} else return nullptr;                                                                    \
-		}(getter);                                                                                    \
-                                                                                                      \
-		void* setter_func = []<typename Signature>(Signature) -> void* {                              \
-			if constexpr (!std::is_null_pointer_v<Signature>)                                         \
-			{                                                                                         \
-				if constexpr (std::is_invocable_v<SetterType, reflected_type*, MemberType&&>)         \
-				{                                                                                     \
-					return +[](void* base_struct_pointer, MemberType& value) -> void {                \
-						auto* object = static_cast<reflected_type*>(base_struct_pointer);             \
-						std::invoke(setter, object, std::move(value));                                \
-					};                                                                                \
-				}                                                                                     \
-				else                                                                                  \
-				{                                                                                     \
-					return +[](void* base_struct_pointer, MemberType& value) -> void {                \
-						auto* object = static_cast<reflected_type*>(base_struct_pointer);             \
-						std::invoke(setter, object, value);                                           \
-					};                                                                                \
-				}                                                                                     \
-			} else return nullptr;                                                                    \
-		}(setter);                                                                                    \
-			                                                                                          \
-		using namespace loupe::metadata;                                                              \
-		members.push_back(loupe::detail::create_member<MemberType>(                                   \
-			blob, #member, offset, getter_func, setter_func, __VA_ARGS__)                             \
-		);                                                                                            \
-	}
-
-#define LOUPE_REF_MEMBER_EX(member, getter, setter, ...) {    \
-	LOUPE_MEMBER_PROLOGUE(member)                             \
-	LOUPE_MEMBER_BODY_EX(member, getter, setter, __VA_ARGS__) \
-	}
-#define LOUPE_REF_MEMBER(member, ...) LOUPE_REF_MEMBER_EX(member, nullptr, nullptr, __VA_ARGS__)
-
-#define LOUPE_REF_PRIVATE_MEMBER_EX(member, getter, setter, ...) { \
-	LOUPE_PRIVATE_MEMBER_PROLOGUE(member)                          \
-	LOUPE_MEMBER_BODY_EX(member, getter, setter, __VA_ARGS__)      \
-    }
-#define LOUPE_REF_PRIVATE_MEMBER(member, ...) LOUPE_REF_PRIVATE_MEMBER_EX(member, nullptr, nullptr, __VA_ARGS__)
+#define LOUPE_MEMBER_EX(member, getter, setter, ...) {                                                                                           \
+	const auto member_info = [] consteval -> auto {                                                                                              \
+		/* Detect if the member is private and the info is exposed via proxies. */                                                               \
+		if constexpr (requires { typename reflected_type::_loupe_private_type_##member; })                                                       \
+		{                                                                                                                                        \
+			return loupe::detail::member_info<reflected_type::_loupe_private_type_##member>{ reflected_type::_loupe_private_offset_##member() }; \
+		}                                                                                                                                        \
+		else                                                                                                                                     \
+		{                                                                                                                                        \
+			return loupe::detail::member_info<decltype(reflected_type::member)>{ __builtin_offsetof(reflected_type, member) };                   \
+		}                                                                                                                                        \
+	}();                                                                                                                                         \
+	using MemberType = decltype(member_info)::Type;                                                                                              \
+                                                                                                                                                 \
+	++count;                                                                                                                                     \
+	if (stage == loupe::detail::task_data_stage::scan_properties)                                                                                \
+	{                                                                                                                                            \
+		loupe::detail::scan_properties<MemberType>(blob, properties, property_tasks);                                                            \
+	}                                                                                                                                            \
+	else if (stage == loupe::detail::task_data_stage::members)                                                                                   \
+	{                                                                                                                                            \
+		using GetterType = decltype(getter);                                                                                                     \
+		using SetterType = decltype(setter);                                                                                                     \
+		static_assert(                                                                                                                           \
+			std::is_null_pointer_v<GetterType> ||                                                                                                \
+			std::is_invocable_r_v<MemberType, GetterType, const reflected_type*>,                                                                \
+			"Getter should be of the form: `MemberType get() const`.");                                                                          \
+		static_assert(                                                                                                                           \
+			std::is_null_pointer_v<SetterType> ||                                                                                                \
+			std::is_invocable_v<SetterType, reflected_type*, MemberType&&> ||                                                                    \
+			std::is_invocable_v<SetterType, reflected_type*, const MemberType&>,                                                                 \
+			"Setter should be callable with either a const reference or mutable r-value reference.");                                            \
+                                                                                                                                                 \
+		/* Opening lambdas as local template contexts to allow for better constexpr support. */                                                  \
+		void* getter_func = []<typename Signature>(Signature) -> void* {                                                                         \
+			if constexpr (!std::is_null_pointer_v<Signature>)                                                                                    \
+			{                                                                                                                                    \
+				return +[](const void* base_struct_pointer) -> MemberType {                                                                      \
+					const auto* object = static_cast<const reflected_type*>(base_struct_pointer);                                                \
+					return std::invoke_r<MemberType>(getter, object);                                                                            \
+				};                                                                                                                               \
+			} else return nullptr;                                                                                                               \
+		}(getter);                                                                                                                               \
+                                                                                                                                                 \
+		void* setter_func = []<typename Signature>(Signature) -> void* {                                                                         \
+			if constexpr (!std::is_null_pointer_v<Signature>)                                                                                    \
+			{                                                                                                                                    \
+				if constexpr (std::is_invocable_v<SetterType, reflected_type*, MemberType&&>)                                                    \
+				{                                                                                                                                \
+					return +[](void* base_struct_pointer, MemberType& value) -> void {                                                           \
+						auto* object = static_cast<reflected_type*>(base_struct_pointer);                                                        \
+						std::invoke(setter, object, std::move(value));                                                                           \
+					};                                                                                                                           \
+				}                                                                                                                                \
+				else                                                                                                                             \
+				{                                                                                                                                \
+					return +[](void* base_struct_pointer, MemberType& value) -> void {                                                           \
+						auto* object = static_cast<reflected_type*>(base_struct_pointer);                                                        \
+						std::invoke(setter, object, value);                                                                                      \
+					};                                                                                                                           \
+				}                                                                                                                                \
+			} else return nullptr;                                                                                                               \
+		}(setter);                                                                                                                               \
+                                                                                                                                                 \
+		using namespace loupe::metadata;                                                                                                         \
+		members.push_back(loupe::detail::create_member<MemberType>(                                                                              \
+			blob, #member, member_info.offset, getter_func, setter_func, __VA_ARGS__)                                                            \
+		);                                                                                                                                       \
+	}}
 
 #define LOUPE_REF_END ;});

@@ -3,6 +3,13 @@ namespace loupe
 {
 	namespace detail
 	{
+		template<typename MemberType>
+		struct member_info
+		{
+			using Type = MemberType;
+			std::size_t offset;
+		};
+
 		template<typename... Functors>
 		struct overload : public Functors...
 		{

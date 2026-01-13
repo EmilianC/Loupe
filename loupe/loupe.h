@@ -47,7 +47,7 @@ public:
 	void set_memberD(float);
 
 	// Required to expose the private member to the reflection system.
-	PRIVATE_MEMBER(my_struct, member);
+	PRIVATE_MEMBER(my_struct, _internal);
 };
 
 REFLECT(example_type)
@@ -57,7 +57,7 @@ REFLECT(example_type)
 		REF_BASE(base2)
 	}
 	MEMBERS {
-		REF_PRIVATE_MEMBER(_internal)
+		REF_MEMBER(_internal)
 		REF_MEMBER(memberA, display_name("My Value"), range(0.0f, 1.0f))
 		REF_MEMBER(memberB, readonly())
 		REF_MEMBER(memberC)
@@ -90,7 +90,7 @@ REF_END;
 #define REFLECT(type_name) LOUPE_REFLECT(type_name)
 
 	// Reflect enumerations and their values.
-	// Metadata can optionally be specific per-value.
+	// Metadata can be specified per-value.
 	#define ENUM_VALUES LOUPE_ENUM_VALUES
 		#define REF_VALUE(value, ...) LOUPE_REF_VALUE(value, __VA_ARGS__)
 
@@ -104,12 +104,10 @@ REF_END;
 
 	// Reflect members of a class or structure. Any reflected getters and setters will
 	// automatically be used by `member::get_copy_from()` and `member::set_on()`.
-	// Metadata can optionally be specified per-member.
+	// Metadata can be specified per-member.
 	#define MEMBERS LOUPE_MEMBERS
-		#define REF_MEMBER(member, ...)                            LOUPE_REF_MEMBER_EX(        member, nullptr, nullptr, __VA_ARGS__)
-		#define REF_MEMBER_EX(member, getter, setter, ...)         LOUPE_REF_MEMBER_EX(        member, getter,  setter,  __VA_ARGS__)
-		#define REF_PRIVATE_MEMBER(member, ...)                    LOUPE_REF_PRIVATE_MEMBER_EX(member, nullptr, nullptr, __VA_ARGS__)
-		#define REF_PRIVATE_MEMBER_EX(member, getter, setter, ...) LOUPE_REF_PRIVATE_MEMBER_EX(member, getter,  setter,  __VA_ARGS__)
+		#define REF_MEMBER(member, ...)                    LOUPE_MEMBER_EX(member, nullptr, nullptr, __VA_ARGS__)
+		#define REF_MEMBER_EX(member, getter, setter, ...) LOUPE_MEMBER_EX(member, getter,  setter,  __VA_ARGS__)
 
 // Terminates a reflection block.
 #define REF_END LOUPE_REF_END
