@@ -7,6 +7,7 @@
 #include <concepts>
 #include <memory>
 #include <span>
+#include <source_location>
 #include <string_view>
 #include <type_traits>
 #include <variant>

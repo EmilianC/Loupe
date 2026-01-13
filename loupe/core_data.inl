@@ -12,7 +12,8 @@ namespace loupe
 		template<typename Type> [[nodiscard]]
 		consteval std::string_view get_type_name()
 		{
-			std::string_view result = __FUNCSIG__;
+			std::string_view result = std::source_location::current().function_name();
+
 #ifdef __clang__
 			const std::string_view function_start_tag = "[Type = ";
 			const std::string_view function_end_tag = "]";
@@ -255,7 +256,7 @@ namespace loupe
 	template<typename Functor> requires std::invocable<Functor, const member&, void*>
 	void structure::walk_members(void* base_struct_pointer, Functor&& func) const
 	{
-		LOUPE_ASSERT(base_struct_pointer, __FUNCTION__ "() requires a pointer to an object to walk.");
+		LOUPE_ASSERT(base_struct_pointer, "A valid object pointer is required to walk members.");
 
 		for (const base& base : bases)
 		{
@@ -273,7 +274,7 @@ namespace loupe
 	template<typename Functor> requires std::invocable<Functor, const member&, const void*>
 	void structure::walk_members(const void* base_struct_pointer, Functor&& func) const
 	{
-		LOUPE_ASSERT(base_struct_pointer, __FUNCTION__ "() requires a pointer to an object to walk.");
+		LOUPE_ASSERT(base_struct_pointer, "A valid object pointer is required to walk members.");
 
 		for (const base& base : bases)
 		{
