@@ -26,7 +26,7 @@ namespace loupe::detail
 			functor();
 		}
 
-		[[no_unique_address]] Functor functor;
+		Functor functor;
 	};
 
 	struct property_task
