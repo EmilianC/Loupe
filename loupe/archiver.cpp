@@ -1,3 +1,3 @@
 #include "archiver.h"
 
-REFLECT(loupe::serializable) REF_END;
+REFLECT_SIMPLE(loupe::serializable);
